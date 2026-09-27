@@ -1,0 +1,64 @@
+@model FinancialDashboardViewModel
+@{
+    ViewData["Title"] = "Financial office";
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head reveal">
+        <div>
+            <p class="kicker">Financial officer</p>
+            <h1>Payment desk</h1>
+        </div>
+        <div class="toolbar">
+            <a class="btn-gold" asp-controller="Financial" asp-action="Record">Record a payment</a>
+            <a class="btn-outline" asp-controller="Maintenance" asp-action="Index">Maintenance</a>
+        </div>
+    </div>
+    <div class="cards-4" style="margin-bottom:1rem">
+        <div class="card reveal"><div class="stat-value">@Model.PendingCount</div><div class="stat-label">In the queue</div></div>
+        <div class="card reveal" style="--d:40ms"><div class="stat-value">@Model.PendingAmount.ToString("C")</div><div class="stat-label">Pending value</div></div>
+        <div class="card reveal" style="--d:80ms"><div class="stat-value">@Model.ConfirmedThisMonth.ToString("C")</div><div class="stat-label">Confirmed this month</div></div>
+        <div class="card reveal" style="--d:120ms"><div class="stat-value">@Model.OpenMaintenance</div><div class="stat-label">Open maintenance</div></div>
+    </div>
+    <div class="split" style="margin-bottom:1rem">
+        <div class="card reveal">
+            <h3>Verification queue</h3>
+            @if (!Model.Queue.Any())
+            {
+                <p class="empty">No pending payments.</p>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="data">
+                        <thead><tr><th>Resident</th><th>Service</th><th>Amount</th><th>Method</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var p in Model.Queue)
+                        {
+                            <tr>
+                                <td>@p.Account.User.Person.FullName</td>
+                                <td>@p.Category.CategoryName</td>
+                                <td>@p.Amount.ToString("C")</td>
+                                <td>@p.PaymentMethod</td>
+                                <td>
+                                    <div class="toolbar">
+                                        <a class="btn-outline btn-sm" asp-controller="Financial" asp-action="Receipt" asp-route-id="@p.PaymentId">Receipt</a>
+                                        <form asp-controller="Financial" asp-action="Confirm" asp-route-id="@p.PaymentId" method="post">
+                                            <button class="btn-ok btn-sm" type="submit">Confirm</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+        <div class="card reveal" style="--d:80ms">
+            <h3>This month by service</h3>
+            <partial name="_CategoryBars" model="Model.TotalsByCategory" />
+            <p class="muted" style="margin-top:1rem">Failed payments on record: @Model.FailedCount · confirmed today: @Model.ConfirmedToday</p>
+        </div>
+    </div>
+</div>

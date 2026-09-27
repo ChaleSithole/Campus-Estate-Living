@@ -1,0 +1,61 @@
+@model List<Payment>
+@{
+    ViewData["Title"] = "Payment history";
+    var account = ViewBag.Account as EstateAccount;
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <div>
+            <p class="kicker">Account @account?.AccountNumber</p>
+            <h1>Payment history</h1>
+        </div>
+        <div class="toolbar">
+            <a class="btn-gold" asp-action="Create">New payment</a>
+            <a class="btn-outline" asp-action="Statement">Monthly statement</a>
+        </div>
+    </div>
+    <div class="toolbar" style="margin-bottom:1rem">
+        <a class="btn-outline btn-sm" asp-action="Index">All</a>
+        <a class="btn-outline btn-sm" asp-action="Index" asp-route-status="Pending">Pending</a>
+        <a class="btn-outline btn-sm" asp-action="Index" asp-route-status="Confirmed">Confirmed</a>
+        <a class="btn-outline btn-sm" asp-action="Index" asp-route-status="Failed">Failed</a>
+    </div>
+    <div class="cards-3" style="margin-bottom:1rem">
+        <div class="card"><span class="stat-label">Outstanding amount</span><div class="stat-value">R0.00</div><p class="muted">No account ledger balance is configured yet.</p></div>
+        <div class="card"><span class="stat-label">Latest payment</span><div class="stat-value" style="font-size:1.2rem">@(Model.FirstOrDefault()?.Amount.ToString("C") ?? "—")</div><p class="muted">@(Model.FirstOrDefault() is Payment latest ? $"{latest.Category.CategoryName} · {latest.PaymentDate:dd MMM yyyy}" : "No payments yet")</p></div>
+        <div class="card"><span class="stat-label">Payment status</span><div class="stat-value" style="font-size:1.2rem">@(Model.FirstOrDefault()?.PaymentStatus.StatusName ?? "No payments yet")</div></div>
+    </div>
+    <div class="card">
+        @if (!Model.Any())
+        {
+            <p class="empty">No payments in this view.</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="data">
+                    <thead><tr><th>Date</th><th>Service</th><th>Amount</th><th>Method</th><th>Reference</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td>@SaTime.Format(p.PaymentDate)</td>
+                            <td>@p.Category.CategoryName</td>
+                            <td>@p.Amount.ToString("C")</td>
+                            <td>@p.PaymentMethod</td>
+                            <td>@p.ReferenceNumber</td>
+                            <td><partial name="_Status" model="p.PaymentStatus.StatusName" /></td>
+                            <td>
+                                <a asp-action="Receipt" asp-route-id="@p.PaymentId">Receipt</a>
+                                ·
+                                <a asp-action="Details" asp-route-id="@p.PaymentId">View</a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

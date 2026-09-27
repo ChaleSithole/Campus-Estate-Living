@@ -1,0 +1,50 @@
+@model AddBankViewModel
+@{
+    ViewData["Title"] = "Add bank account";
+}
+<div class="page">
+    <div class="card form-card">
+        <h1>Add a bank account</h1>
+        <p><a class="btn-outline btn-sm" asp-action="PaymentMethods">← Back to payment methods</a></p>
+        <form asp-action="AddBank" method="post" class="form-grid">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div>
+                <label asp-for="BankName"></label>
+                <select asp-for="BankName" class="form-control">
+                    <option>First National Bank</option>
+                    <option>Standard Bank</option>
+                    <option>ABSA</option>
+                    <option>Nedbank</option>
+                    <option>Capitec</option>
+                    <option>African Bank</option>
+                </select>
+            </div>
+            <div>
+                <label asp-for="AccountHolder"></label>
+                <input asp-for="AccountHolder" class="form-control" />
+            </div>
+            <div>
+                <label asp-for="AccountNumber"></label>
+                <input asp-for="AccountNumber" class="form-control" inputmode="numeric" />
+                <span asp-validation-for="AccountNumber"></span>
+            </div>
+            <div class="form-grid two">
+                <div>
+                    <label asp-for="BranchCode"></label>
+                    <input asp-for="BranchCode" class="form-control" />
+                </div>
+                <div>
+                    <label asp-for="AccountType"></label>
+                    <select asp-for="AccountType" class="form-control">
+                        <option>Cheque</option>
+                        <option>Savings</option>
+                        <option>Transmission</option>
+                    </select>
+                </div>
+            </div>
+            <label style="font-weight:500"><input asp-for="IsDefault" /> Default account</label>
+            <button class="btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

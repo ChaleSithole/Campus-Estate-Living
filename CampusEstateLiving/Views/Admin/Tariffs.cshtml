@@ -1,0 +1,39 @@
+@model Tariff
+@{
+    ViewData["Title"] = "Tariffs";
+    var tariffs = ViewBag.Tariffs as List<Tariff> ?? [];
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head"><div><p class="kicker">Administrator controls</p><h1>Tariffs &amp; pricing</h1><p class="muted">Set service prices and control which tariffs residents can select.</p></div></div>
+    <div class="split">
+        <section class="card">
+            <h2>Add tariff</h2>
+            <form asp-action="Tariffs" method="post" class="form-grid">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div><label asp-for="CategoryId">Service category</label><select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-control"><option value="">Choose a service</option></select><span asp-validation-for="CategoryId" class="text-danger"></span></div>
+                <div><label asp-for="TariffName">Tariff name</label><input asp-for="TariffName" class="form-control" /><span asp-validation-for="TariffName" class="text-danger"></span></div>
+                <div class="form-grid two"><div><label asp-for="Amount">Amount (ZAR)</label><input asp-for="Amount" class="form-control" type="number" min="0.01" max="1000000" step="0.01" /><span asp-validation-for="Amount" class="text-danger"></span></div><div><label asp-for="Unit">Billing unit</label><input asp-for="Unit" class="form-control" placeholder="Monthly" /><span asp-validation-for="Unit" class="text-danger"></span></div></div>
+                <label class="choice"><input asp-for="IsActive" /> Active and available to residents</label>
+                <button class="btn-gold" type="submit">Add tariff</button>
+            </form>
+        </section>
+        <section class="card">
+            <h2>Configured tariffs</h2>
+            @if (tariffs.Count == 0)
+            {
+                <p class="muted">No tariffs configured yet.</p>
+            }
+            else
+            {
+                <div class="table-wrap"><table class="data"><thead><tr><th>Service / tariff</th><th>Amount</th><th>Unit</th><th>Status</th><th></th></tr></thead><tbody>
+                @foreach (var tariff in tariffs)
+                {
+                    <tr><td><strong>@tariff.Category.CategoryName</strong><br />@tariff.TariffName</td><td colspan="4"><form asp-action="UpdateTariff" asp-route-id="@tariff.TariffId" method="post" class="toolbar"><input name="amount" type="number" min="0.01" max="1000000" step="0.01" value="@tariff.Amount" class="form-control" aria-label="Amount" required /><input name="unit" value="@tariff.Unit" maxlength="40" class="form-control" aria-label="Billing unit" required /><label class="choice"><input name="isActive" type="checkbox" value="true" checked="@tariff.IsActive" /> Active</label><input name="isActive" type="hidden" value="false" /><button class="btn-outline btn-sm" type="submit">Save</button></form></td></tr>
+                }
+                </tbody></table></div>
+            }
+        </section>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

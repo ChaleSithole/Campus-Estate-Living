@@ -1,0 +1,36 @@
+@model AddCardViewModel
+@{
+    ViewData["Title"] = "Add card";
+}
+<div class="page">
+    <div class="card form-card">
+        <p class="kicker">Wallet</p>
+        <h1>Add a card</h1>
+        <p class="muted">Add a payment card to use for estate service payments.</p>
+        <p><a class="btn-outline btn-sm" href="@(Url.IsLocalUrl(Model.ReturnUrl) ? Model.ReturnUrl : Url.Action("PaymentMethods", "Profile"))">← Back</a></p>
+        <form asp-action="AddCard" method="post" class="form-grid">
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div>
+                <label asp-for="CardholderName"></label>
+                <input asp-for="CardholderName" class="form-control" />
+                <span asp-validation-for="CardholderName"></span>
+            </div>
+            <div><label asp-for="CardNumber"></label><input asp-for="CardNumber" class="form-control" autocomplete="cc-number" inputmode="numeric" placeholder="4242 4242 4242 4242" /><span asp-validation-for="CardNumber" class="text-danger"></span></div>
+            <div><label asp-for="Cvv"></label><input asp-for="Cvv" class="form-control" autocomplete="cc-csc" inputmode="numeric" maxlength="4" /><span asp-validation-for="Cvv" class="text-danger"></span></div>
+            <div class="form-grid two">
+                <div>
+                    <label asp-for="ExpiryMonth"></label>
+                    <input asp-for="ExpiryMonth" class="form-control" autocomplete="cc-exp-month" min="1" max="12" />
+                </div>
+                <div>
+                    <label asp-for="ExpiryYear"></label>
+                    <input asp-for="ExpiryYear" class="form-control" autocomplete="cc-exp-year" min="2026" max="2100" />
+                </div>
+            </div>
+            <label style="font-weight:500"><input asp-for="IsDefault" /> Default card</label>
+            <button class="btn-primary" type="submit">Save card</button>
+        </form>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

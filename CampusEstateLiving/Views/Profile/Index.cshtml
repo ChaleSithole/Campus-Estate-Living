@@ -1,0 +1,73 @@
+@model ApplicationUser
+@{
+    ViewData["Title"] = "Profile";
+    var roles = (IList<string>)ViewBag.Roles;
+    var assignment = ViewBag.Assignment as RoomAssignment;
+    var linked = ViewBag.LinkedAccounts as List<ApplicationUser> ?? [];
+    var vehicles = ViewBag.Vehicles as List<ResidentVehicle> ?? [];
+    var age = Model.Person.DateOfBirth is DateTime birth ? DateTime.Today.Year - birth.Year - (DateTime.Today.Date < birth.Date.AddYears(DateTime.Today.Year - birth.Year) ? 1 : 0) : (int?)null;
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <div>
+            <p class="kicker">Account</p>
+            <h1>@Model.Person.FullName</h1>
+        </div>
+        <div class="toolbar">
+            <a class="btn-outline" asp-action="Edit">Edit profile</a>
+            <a class="btn-outline" asp-controller="Account" asp-action="ChangePassword">Change password</a>
+        </div>
+    </div>
+    <div class="cards-2">
+        <div class="card">
+            <h3>Personal information</h3>
+            <p><strong>Full name</strong><br />@Model.Person.FullName</p>
+            <p><strong>Date of birth / age</strong><br />@(Model.Person.DateOfBirth?.ToString("dd MMM yyyy") ?? "Not provided")@(age.HasValue ? $" · {age} years" : "")</p>
+            <p><strong>Gender</strong><br />@(Model.Person.Gender ?? "Not provided")</p>
+            <p><strong>Disability support</strong><br />@(Model.Person.HasDisability ? Model.Person.DisabilityDetails ?? "Requested" : "Not requested")</p>
+            <p><strong>Contact / email</strong><br />@(Model.Person.PhoneNumber ?? "—") · @Model.Email</p>
+            <h3>Account information</h3>
+            <p><strong>@(roles.Contains(AppRoles.Student) ? "Student Number" : roles.Contains(AppRoles.Staff) ? "Staff Number" : roles.Contains(AppRoles.FinancialOfficer) ? "Officer Number" : "Admin Number")</strong><br />@Model.UserNumber</p>
+            <p><strong>Role</strong><br />@foreach (var r in roles) { <partial name="_Status" model="r" /> }</p>
+            <p><strong>Status</strong><br /><partial name="_Status" model="@(Model.IsActive ? "Active" : "Inactive")" /></p>
+            @if (Model.EstateAccount != null)
+            {
+                <p><strong>Account status</strong><br />@Model.EstateAccount.AccountStatus</p>
+                <p><strong>Payment status</strong><br />@(Model.EstateAccount.Payments.OrderByDescending(p => p.PaymentDate).Select(p => p.PaymentStatus.StatusName).FirstOrDefault() ?? "No payments yet")</p>
+            }
+            <p><strong>Registration date</strong><br />@Model.CreatedAt.ToString("dd MMM yyyy")</p>
+            <p><strong>Last login</strong><br />@(Model.LastLoginAt?.ToString("dd MMM yyyy HH:mm") ?? "Not available")</p>
+        </div>
+        <div class="card">
+            <h3>Accommodation</h3>
+            @if (assignment == null)
+            {
+                <p class="muted">No active room on this account. Staff side accounts show resident details only if they also have accommodation registered.</p>
+            }
+            else
+            {
+                <p><strong>@assignment.Room.Property.BuildingName</strong> · Room @assignment.Room.RoomNumber</p>
+                <p class="muted">@assignment.Room.RoomType.RoomTypeName · moved in @assignment.MoveInDate.ToString("dd MMM yyyy")</p>
+            }
+            @if (linked.Any())
+            {
+                <h3 style="margin-top:1.2rem">Other accounts for this person</h3>
+                <p class="muted">The same person can hold separate logins. Permissions follow the account you signed in with.</p>
+                <ul>
+                    @foreach (var u in linked)
+                    {
+                        <li>@u.Email — @string.Join(", ", u.UserRoles.Select(r => r.Role.Name))</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+    @if (User.IsInRole(AppRoles.Student) || User.IsInRole(AppRoles.Staff))
+    {
+        <div class="card" style="margin-top:1rem"><h3>Vehicles and parking</h3><p class="muted">Register up to three vehicles. One vehicle is included; paid parking becomes available from your second vehicle.</p>
+            @foreach (var vehicle in vehicles) { <div class="toolbar"><strong>@vehicle.RegistrationNumber</strong><span>@vehicle.MakeAndModel</span><form asp-action="RemoveVehicle" asp-route-id="@vehicle.VehicleId" method="post"><button class="btn-outline btn-sm" type="submit">Remove</button></form></div> }
+            @if (vehicles.Count < 3) { <form asp-action="AddVehicle" method="post" class="form-grid two" style="margin-top:1rem"><input name="RegistrationNumber" class="form-control" placeholder="Registration number" required maxlength="12" /><input name="MakeAndModel" class="form-control" placeholder="Make and model (optional)" maxlength="60" /><button class="btn-gold" type="submit">Register vehicle</button></form> }
+        </div>
+    }
+</div>

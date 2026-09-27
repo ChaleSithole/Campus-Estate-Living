@@ -1,0 +1,64 @@
+@model CreateUserViewModel
+@{
+    ViewData["Title"] = "Add user";
+    var persons = (List<SelectListItem>)ViewBag.Persons;
+}
+<div class="page">
+    <div class="card" style="max-width:640px">
+        <h1>Add user account</h1>
+        <p><a class="btn-outline btn-sm" asp-action="Users">← Back to users</a></p>
+        <p class="muted">To give an administrator a room, create a separate Student or Staff login for the same person.</p>
+        <form asp-action="CreateUser" method="post" class="form-grid" data-confirm-create>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div>
+                <label asp-for="Role"></label>
+                <select asp-for="Role" class="form-control" data-role-select>
+                    <option value="Student">Student</option>
+                    <option value="Staff">Staff</option>
+                    <option value="FinancialOfficer">Financial Officer</option>
+                    <option value="Administrator">Administrator</option>
+                </select>
+            </div>
+            <div>
+                <label asp-for="ExistingPersonId"></label>
+                <select asp-for="ExistingPersonId" class="form-control" asp-items="persons">
+                    <option value="">New person</option>
+                </select>
+            </div>
+            <p class="hint">The identification field updates by role: Student 10 digits; Staff, Officer, and Admin numbers 7 digits.</p>
+            <div class="form-grid two">
+                <div>
+                    <label asp-for="FirstName"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                </div>
+                <div>
+                    <label asp-for="LastName"></label>
+                    <input asp-for="LastName" class="form-control" />
+                </div>
+            </div>
+            <div>
+                <label asp-for="UserNumber" data-user-number-label></label>
+                <input asp-for="UserNumber" class="form-control" data-user-number inputmode="numeric" />
+            </div>
+            <div class="form-grid two"><div><label asp-for="DateOfBirth"></label><input asp-for="DateOfBirth" class="form-control" type="date" /></div><div><label asp-for="Gender"></label><select asp-for="Gender" class="form-control"><option value="">Select</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></div></div>
+            <label style="font-weight:500"><input asp-for="HasDisability" /> Disability support requested</label>
+            <div><label asp-for="DisabilityDetails"></label><textarea asp-for="DisabilityDetails" class="form-control" rows="2"></textarea></div>
+            <div>
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="form-control" />
+            </div>
+            <div>
+                <label asp-for="PhoneNumber"></label>
+                <input asp-for="PhoneNumber" class="form-control" />
+            </div>
+            <div>
+                <label asp-for="Password"></label>
+                <input asp-for="Password" class="form-control" />
+            </div>
+            <label style="font-weight:500"><input asp-for="CreateEstateAccount" /> Create estate account (residents only)</label>
+            <button class="btn-primary" type="submit">Create account</button>
+        </form>
+    </div>
+</div>
+<div class="modal-backdrop" data-create-modal hidden><section class="confirm-modal" role="dialog" aria-modal="true"><h2>Create Account?</h2><p>Please confirm that the information entered is correct.</p><div class="toolbar"><button type="button" class="btn-outline" data-cancel-create>Cancel</button><button type="button" class="btn-primary" data-accept-create>Create Account</button></div></section></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

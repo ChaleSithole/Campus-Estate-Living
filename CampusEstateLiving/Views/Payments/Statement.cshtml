@@ -1,0 +1,82 @@
+@model StatementViewModel
+@{
+    ViewData["Title"] = "Statement · " + Model.PeriodLabel;
+}
+<div class="page">
+    <div class="page-head no-print">
+        <div>
+            <p class="kicker">Estate account @Model.AccountNumber</p>
+            <h1>Monthly statement</h1>
+            <p class="muted" style="margin:0">@Model.PeriodLabel</p>
+        </div>
+        <div class="toolbar">
+            <form method="get" class="toolbar">
+                <select name="month" class="form-control" style="width:auto" onchange="this.form.submit()">
+                    @for (var i = 1; i <= 12; i++)
+                    {
+                        <option value="@i" selected="@(i == Model.Month)">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)</option>
+                    }
+                </select>
+                <select name="year" class="form-control" style="width:auto" onchange="this.form.submit()">
+                    @for (var y = Model.Year - 2; y <= Model.Year + 1; y++)
+                    {
+                        <option value="@y" selected="@(y == Model.Year)">@y</option>
+                    }
+                </select>
+            </form>
+            <button class="btn-gold" type="button" onclick="window.print()">Print</button>
+            <a class="btn-outline" asp-action="Index">History</a>
+        </div>
+    </div>
+
+    <article class="receipt reveal">
+        <header class="receipt-head">
+            <div>
+                <img src="~/images/logo-sm.png" alt="" />
+                <p class="kicker">University of the Free State · QwaQwa Campus</p>
+                <h1>Account statement</h1>
+            </div>
+            <div class="receipt-ref">
+                <span>Period</span>
+                <strong>@Model.PeriodLabel</strong>
+            </div>
+        </header>
+        <dl class="receipt-grid">
+            <div><dt>Resident</dt><dd>@Model.FullName</dd></div>
+            <div><dt>Number</dt><dd>@Model.UserNumber</dd></div>
+            <div><dt>Account</dt><dd>@Model.AccountNumber</dd></div>
+            <div><dt>Room</dt><dd>@Model.RoomLabel</dd></div>
+        </dl>
+        @if (!Model.Payments.Any())
+        {
+            <p class="empty">No payments in this month.</p>
+        }
+        else
+        {
+            <table class="receipt-lines">
+                <thead>
+                    <tr><th>Date</th><th>Reference</th><th>Service</th><th>Status</th><th>Amount</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var p in Model.Payments)
+                {
+                    <tr>
+                        <td>@SaTime.FormatDate(p.PaymentDate)</td>
+                        <td>@p.ReferenceNumber</td>
+                        <td>@p.Category.CategoryName</td>
+                        <td>@p.PaymentStatus.StatusName</td>
+                        <td>@p.Amount.ToString("C")</td>
+                    </tr>
+                }
+                </tbody>
+                <tfoot>
+                    <tr><th colspan="4">Confirmed</th><th>@Model.ConfirmedTotal.ToString("C")</th></tr>
+                    <tr><th colspan="4">Pending</th><th>@Model.PendingTotal.ToString("C")</th></tr>
+                </tfoot>
+            </table>
+        }
+        <footer class="receipt-foot">
+            <div class="muted">Campus Estate Living · Generated @SaTime.Format(DateTime.UtcNow)</div>
+        </footer>
+    </article>
+</div>

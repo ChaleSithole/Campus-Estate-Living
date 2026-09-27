@@ -1,0 +1,61 @@
+@{
+    ViewData["Title"] = "Help";
+}
+<div class="page">
+    <div class="page-head reveal">
+        <div>
+            <p class="kicker">Estate office</p>
+            <h1>Help & contacts</h1>
+        </div>
+    </div>
+    <div class="cards-3" style="margin-bottom:1.2rem">
+        <div class="card reveal">
+            <div class="service-icon"><i class="bi bi-building"></i></div>
+            <h3>Estate office</h3>
+            <p class="muted" style="margin-bottom:0.4rem">Weekdays 08:00–16:30</p>
+            <p><a href="tel:+27587185000">058 718 5000</a><br />estate.qwaqwa@ufs.ac.za</p>
+        </div>
+        <div class="card reveal" style="--d:80ms">
+            <div class="service-icon"><i class="bi bi-shield-check"></i></div>
+            <h3>Campus security</h3>
+            <p class="muted" style="margin-bottom:0.4rem">After hours and emergencies</p>
+            <p><a href="tel:+27587185111">058 718 5111</a></p>
+        </div>
+        <div class="card reveal" style="--d:120ms">
+            <div class="service-icon"><i class="bi bi-bank"></i></div>
+            <h3>Estate EFT</h3>
+            <p class="muted" style="margin-bottom:0.4rem">First National Bank · Branch 250655</p>
+            <p>Account 62841029331<br />Use your estate account number as the reference.</p>
+        </div>
+    </div>
+    <div class="split">
+        <div class="card reveal">
+            <h2>Payments</h2>
+            <ul class="plain-list">
+                <li>Choose a published tariff. The amount is set by the estate, not typed in.</li>
+                <li>EFT starts as <strong>Pending</strong> until an officer verifies it. Card payments require gateway setup.</li>
+                <li>A receipt is created the moment you pay. After confirmation it becomes official.</li>
+                <li>Print a monthly statement from History → Statement.</li>
+                <li>Card numbers and CVV must be handled by the payment gateway and are not collected by this app.</li>
+            </ul>
+        </div>
+        <div class="card reveal" style="--d:80ms">
+            <h2>Rooms & maintenance</h2>
+            <ul class="plain-list">
+                <li>The administrator assigns rooms. Sharing rooms take two residents.</li>
+                <li>Log plumbing, electrical, furniture or security issues from Maintenance.</li>
+                <li>You will get a notice when the status changes.</li>
+                <li>Estate notices appear on your dashboard and under Notices.</li>
+                <li>Public registration is for students and staff only.</li>
+            </ul>
+        </div>
+    </div>
+    @if (User.IsInRole(AppRoles.FinancialOfficer))
+    {
+        <div class="cards-2" style="margin-top:1rem"><section class="card"><h2>Payment processing</h2><ul class="plain-list"><li>Select a resident, choose an active tariff, and verify the calculated amount.</li><li>For cash, select Cash and confirm only after receiving the amount. The signed-in officer is recorded in the audit trail.</li><li>For failed transactions, do not record a confirmed payment; explain the issue to the resident and retry only after checking history.</li></ul></section><section class="card"><h2>Financial records</h2><ul class="plain-list"><li>Use Payments to search transactions and review payment history.</li><li>Open resident accounts to review recorded payments and status.</li><li>For duplicate, incorrect, or missing cash entries, preserve the reference and contact the estate administrator for correction.</li></ul></section></div>
+    }
+    @if (User.IsInRole(AppRoles.Administrator))
+    {
+        <div class="cards-2" style="margin-top:1rem"><section class="card"><h2>Administration</h2><ul class="plain-list"><li>Manage resident, staff, and officer accounts under Users.</li><li>Configure tariffs and services in Management.</li><li>Set up buildings and rooms, then assign residents under Estate.</li><li>Sharing room assignments require matching gender and are checked by the server.</li></ul></section><section class="card"><h2>Resident and payment issues</h2><ul class="plain-list"><li>Review resident profile and account status before changing records.</li><li>Use Payments and Reports to monitor transaction status.</li><li>Resolve duplicate or incorrect payments with the transaction reference and keep an audit note.</li></ul></section></div>
+    }
+</div>

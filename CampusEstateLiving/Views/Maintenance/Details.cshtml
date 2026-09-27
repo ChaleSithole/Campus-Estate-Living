@@ -1,0 +1,59 @@
+@model MaintenanceRequest
+@{
+    ViewData["Title"] = Model.Title;
+    var staff = (bool)(ViewBag.IsStaffSide ?? false);
+    var update = ViewBag.Update as MaintenanceUpdateViewModel;
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="split">
+        <div class="card reveal">
+            <p class="kicker">@Model.Category · @Model.Priority</p>
+            <h1>@Model.Title</h1>
+            <p><span class="badge @(Model.Status == MaintenanceStatuses.Open ? "badge-pending" : Model.Status == MaintenanceStatuses.Resolved ? "badge-confirmed" : "badge-admin")">@Model.Status</span></p>
+            <p>@Model.Description</p>
+            <dl class="receipt-grid">
+                <div><dt>Resident</dt><dd>@Model.User.Person.FullName</dd></div>
+                <div><dt>Room</dt><dd>@(Model.Room == null ? "Not assigned" : $"{Model.Room.Property.BuildingName} {Model.Room.RoomNumber}")</dd></div>
+                <div><dt>Logged</dt><dd>@SaTime.Format(Model.CreatedAt)</dd></div>
+                <div><dt>Updated</dt><dd>@SaTime.Format(Model.UpdatedAt)</dd></div>
+            </dl>
+            @if (!string.IsNullOrWhiteSpace(Model.StaffNotes))
+            {
+                <p><strong>Office notes</strong><br />@Model.StaffNotes</p>
+            }
+        </div>
+        @if (staff && update != null)
+        {
+            <div class="card reveal" style="--d:80ms">
+                <h2>Update</h2>
+                <form asp-action="Update" method="post" class="form-grid">
+                    <input type="hidden" name="RequestId" value="@update.RequestId" />
+                    <div>
+                        <label>Status</label>
+                        <select name="Status" class="form-control">
+                            @foreach (var s in MaintenanceStatuses.All)
+                            {
+                                <option value="@s" selected="@(s == update.Status)">@s</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label>Priority</label>
+                        <select name="Priority" class="form-control">
+                            @foreach (var p in MaintenancePriorities.All)
+                            {
+                                <option value="@p" selected="@(p == update.Priority)">@p</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label>Office notes</label>
+                        <textarea name="StaffNotes" class="form-control" rows="4">@update.StaffNotes</textarea>
+                    </div>
+                    <button class="btn-gold" type="submit">Save update</button>
+                </form>
+            </div>
+        }
+    </div>
+</div>

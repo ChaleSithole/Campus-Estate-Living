@@ -1,0 +1,50 @@
+@model List<Notification>
+@{
+    ViewData["Title"] = "Notifications";
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <h1>Notifications</h1>
+        <form asp-action="MarkAllRead" method="post">
+            <button class="btn-outline" type="submit">Mark all read</button>
+        </form>
+    </div>
+    <div class="card">
+        @if (!Model.Any())
+        {
+            <p class="empty">No notifications yet.</p>
+        }
+        else
+        {
+            @foreach (var n in Model)
+            {
+                <div style="display:flex;justify-content:space-between;gap:1rem;padding:0.85rem 0;border-bottom:1px solid var(--line);opacity:@(n.IsRead ? "0.65" : "1")">
+                    <div>
+                        <strong>@n.Title</strong>
+                        <div>@n.Message</div>
+                        <div class="muted">@n.NotificationType · @SaTime.Format(n.CreatedAt)</div>
+                        @if (n.PaymentId.HasValue)
+                        {
+                            var staff = User.IsInRole(AppRoles.Administrator) || User.IsInRole(AppRoles.FinancialOfficer);
+                            if (staff)
+                            {
+                                <a asp-controller="Financial" asp-action="PaymentDetails" asp-route-id="@n.PaymentId">Open payment</a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Payments" asp-action="Details" asp-route-id="@n.PaymentId">Open payment</a>
+                            }
+                        }
+                    </div>
+                    @if (!n.IsRead)
+                    {
+                        <form asp-action="MarkRead" asp-route-id="@n.NotificationId" method="post">
+                            <button class="btn-outline btn-sm" type="submit">Read</button>
+                        </form>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>

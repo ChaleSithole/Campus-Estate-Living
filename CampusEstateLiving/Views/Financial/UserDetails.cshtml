@@ -1,0 +1,38 @@
+@model ApplicationUser
+@{
+    ViewData["Title"] = Model.Person.FullName;
+    var payments = ViewBag.Payments as List<Payment> ?? [];
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <div>
+            <h1>@Model.Person.FullName</h1>
+            <p class="muted">@Model.Email · @Model.UserNumber · @Model.EstateAccount?.AccountNumber</p>
+        </div>
+        <div class="toolbar">
+            <a class="btn-outline" asp-action="EditUser" asp-route-id="@Model.Id">Update details</a>
+            <a class="btn-outline" asp-action="ResetPassword" asp-route-id="@Model.Id">Reset password</a>
+        </div>
+    </div>
+    <div class="card">
+        <h3>Payments</h3>
+        <div class="table-wrap">
+            <table class="data">
+                <thead><tr><th>Date</th><th>Service</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var p in payments)
+                {
+                    <tr>
+                        <td>@SaTime.FormatDate(p.PaymentDate)</td>
+                        <td>@p.Category.CategoryName</td>
+                        <td>@p.Amount.ToString("C")</td>
+                        <td><partial name="_Status" model="p.PaymentStatus.StatusName" /></td>
+                        <td><a asp-action="PaymentDetails" asp-route-id="@p.PaymentId">Open</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

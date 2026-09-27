@@ -1,0 +1,101 @@
+@model List<ApplicationUser>
+@{
+    var role = ViewBag.Role as string;
+    var title = role switch
+    {
+        AppRoles.FinancialOfficer => "Financial officers",
+        AppRoles.Student => "Students",
+        AppRoles.Staff => "Staff",
+        AppRoles.Administrator => "Administrators",
+        _ => "Users"
+    };
+    ViewData["Title"] = title;
+    string RoleName(ApplicationUser u) =>
+        u.UserRoles.Select(r => r.Role.Name).FirstOrDefault() ?? "—";
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head reveal">
+        <div>
+            <p class="kicker">Directory</p>
+            <h1>@title</h1>
+            <p class="muted" style="margin:0">@Model.Count account@(Model.Count == 1 ? "" : "s") in this view.</p>
+        </div>
+        <div class="toolbar">
+            <a class="btn-gold" asp-action="CreateUser" asp-route-role="@role">Add user</a>
+        </div>
+    </div>
+
+    <form method="get" class="toolbar" style="margin-bottom:1rem">
+        <input class="form-control" name="q" value="@ViewBag.Q" placeholder="Name, email or number" style="max-width:280px" />
+        @if (!string.IsNullOrWhiteSpace(role))
+        {
+            <input type="hidden" name="role" value="@role" />
+        }
+        <button class="btn-outline" type="submit">Search</button>
+        <a class="btn-outline btn-sm @(string.IsNullOrWhiteSpace(role) ? "active" : null)" asp-action="Users">All</a>
+        <a class="btn-outline btn-sm @(role == AppRoles.Student ? "active" : null)" asp-action="Students">Students</a>
+        <a class="btn-outline btn-sm @(role == AppRoles.Staff ? "active" : null)" asp-action="Staff">Staff</a>
+        <a class="btn-outline btn-sm" asp-action="Management">Management</a>
+        <a class="btn-outline btn-sm @(role == AppRoles.Administrator ? "active" : null)" asp-action="Users" asp-route-role="@AppRoles.Administrator">Administrators</a>
+    </form>
+
+    <div class="card reveal">
+        @if (!Model.Any())
+        {
+            <p class="empty">No users match this view.</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="data">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Number</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Account</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var u in Model)
+                    {
+                        var r = RoleName(u);
+                        <tr>
+                            <td>
+                                <a asp-action="UserDetails" asp-route-id="@u.Id">@u.Person.FullName</a>
+                            </td>
+                            <td>@u.UserNumber</td>
+                            <td>@u.Email</td>
+                            <td><partial name="_Status" model="r" /></td>
+                            <td>@(u.EstateAccount?.AccountNumber ?? "—")</td>
+                            <td>
+                                @if (!u.IsActive)
+                                {
+                                    <partial name="_Status" model='"Inactive"' />
+                                }
+                                else if (u.EstateAccount != null)
+                                {
+                                    <partial name="_Status" model="u.EstateAccount.AccountStatus" />
+                                }
+                                else
+                                {
+                                    <partial name="_Status" model='"Active"' />
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="UserDetails" asp-route-id="@u.Id">Open</a>
+                                ·
+                                <a asp-action="EditUser" asp-route-id="@u.Id">Edit</a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

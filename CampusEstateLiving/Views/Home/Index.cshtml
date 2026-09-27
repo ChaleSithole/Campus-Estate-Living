@@ -1,0 +1,76 @@
+@{
+    ViewData["Title"] = "Campus Estate Living";
+}
+<section class="hero">
+    <div class="hero-inner">
+        <div class="reveal">
+            <div class="kicker">University of the Free State · QwaQwa Campus</div>
+            <h1>Estate living, without the queue.</h1>
+            <p class="lead">Students and staff pay rent, water, electricity, parking and refuse from one estate account. Officers verify each payment. You walk away with a receipt.</p>
+            <div class="hero-actions">
+                <a class="btn-gold" asp-controller="Account" asp-action="Register">Create a resident account</a>
+                <a class="btn-ghost" asp-controller="Account" asp-action="Login">Sign in</a>
+            </div>
+        </div>
+        <div class="hero-panel reveal" style="--d:120ms">
+            <img src="~/images/logo-sm.png" alt="Campus Estate Living" class="hero-logo" />
+            <h2>How a payment works</h2>
+            <ol class="steps">
+                <li>Register with your student or employee number.</li>
+                <li>Choose a tariff and pay by card or EFT.</li>
+                <li>A financial officer verifies it. A branded receipt is issued.</li>
+            </ol>
+            <p class="muted" style="margin-bottom:0">Maintenance, notices and statements live in the same login.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-inner">
+        <p class="kicker reveal">Estate services</p>
+        <h2 class="reveal">Five payments. One account.</h2>
+        <div class="cards-5" style="margin-top:1.4rem">
+            <div class="card reveal" style="--d:40ms">
+                <div class="service-icon"><i class="bi bi-house-door"></i></div>
+                <h3>Rent</h3>
+                <p class="muted">Monthly rent for single and sharing rooms, billed to your estate account.</p>
+            </div>
+            <div class="card reveal" style="--d:80ms">
+                <div class="service-icon"><i class="bi bi-droplet"></i></div>
+                <h3>Water</h3>
+                <p class="muted">A monthly water levy, confirmed by a financial officer.</p>
+            </div>
+            <div class="card reveal" style="--d:120ms">
+                <div class="service-icon"><i class="bi bi-lightning-charge"></i></div>
+                <h3>Electricity</h3>
+                <p class="muted">Prepaid units in 50, 100 or 200 kWh packs.</p>
+            </div>
+            <div class="card reveal" style="--d:160ms">
+                <div class="service-icon"><i class="bi bi-p-square"></i></div>
+                <h3>Parking</h3>
+                <p class="muted">An extra-vehicle parking tariff if you keep more than one car on estate.</p>
+            </div>
+            <div class="card reveal" style="--d:200ms">
+                <div class="service-icon"><i class="bi bi-trash3"></i></div>
+                <h3>Refuse</h3>
+                <p class="muted">The monthly refuse levy, recorded against the same estate account.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-inner split">
+        <div class="card reveal">
+            <p class="kicker">Receipts</p>
+            <h2>A paper trail that actually prints.</h2>
+            <p class="muted">Every payment produces a branded receipt with your reference, method and status. Confirmed payments become official estate receipts. Print or save them from history at any time.</p>
+        </div>
+        <div class="card reveal" style="--d:80ms">
+            <p class="kicker">After hours</p>
+            <h2>The office is one login away.</h2>
+            <p class="muted">Log a leaking tap, a dark corridor or a broken lock from Maintenance. Estate notices appear on your dashboard. Help lists the office and campus security numbers.</p>
+            <a class="btn-outline" asp-controller="Home" asp-action="Help">View contacts</a>
+        </div>
+    </div>
+</section>

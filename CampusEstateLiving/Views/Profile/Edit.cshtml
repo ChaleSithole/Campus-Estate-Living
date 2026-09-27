@@ -1,0 +1,38 @@
+@model ProfileEditViewModel
+@{
+    ViewData["Title"] = "Edit profile";
+}
+<div class="page">
+    <div class="card form-card">
+        <h1>Edit profile</h1>
+        <p><a class="btn-outline btn-sm" asp-action="Index">← Back to profile</a></p>
+        <form asp-action="Edit" method="post" class="form-grid">
+            <div class="form-grid two">
+                <div>
+                    <label asp-for="FirstName"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                </div>
+                <div>
+                    <label asp-for="LastName"></label>
+                    <input asp-for="LastName" class="form-control" />
+                </div>
+            </div>
+            <div>
+                <label asp-for="PhoneNumber"></label>
+                <input asp-for="PhoneNumber" class="form-control" />
+            </div>
+            <div class="form-grid two"><div><label asp-for="DateOfBirth"></label><input asp-for="DateOfBirth" class="form-control" type="date" /></div><div><label asp-for="Gender"></label><select asp-for="Gender" class="form-control"><option value="">Select</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></div></div>
+            <label style="font-weight:500"><input asp-for="HasDisability" /> Disability support requested</label>
+            <div><label asp-for="DisabilityDetails"></label><textarea asp-for="DisabilityDetails" class="form-control" rows="2"></textarea></div>
+            <div>
+                <label>Email</label>
+                <input asp-for="Email" class="form-control" readonly />
+            </div>
+            <div>
+                <label>User number</label>
+                <input asp-for="UserNumber" class="form-control" readonly />
+            </div>
+            <button class="btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+</div>

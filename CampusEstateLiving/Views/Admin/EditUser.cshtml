@@ -1,0 +1,51 @@
+@model EditUserViewModel
+@{
+    ViewData["Title"] = "Edit user";
+}
+<div class="page">
+    <div class="card form-card">
+        <h1>Edit user</h1>
+        <p><a class="btn-outline btn-sm" asp-action="Users">← Back to users</a></p>
+        <p class="muted">Role: @Model.Role</p>
+        <form asp-action="EditUser" method="post" class="form-grid">
+            <input type="hidden" asp-for="UserId" />
+            <input type="hidden" asp-for="PersonId" />
+            <input type="hidden" asp-for="Role" />
+            <div class="form-grid two">
+                <div>
+                    <label asp-for="FirstName"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                </div>
+                <div>
+                    <label asp-for="LastName"></label>
+                    <input asp-for="LastName" class="form-control" />
+                </div>
+            </div>
+            <div>
+                <label asp-for="UserNumber"></label>
+                <input asp-for="UserNumber" class="form-control" />
+            </div>
+            <div>
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="form-control" readonly />
+            </div>
+            <div>
+                <label asp-for="PhoneNumber"></label>
+                <input asp-for="PhoneNumber" class="form-control" />
+            </div>
+            <label style="font-weight:500"><input asp-for="IsActive" /> Active login</label>
+            @if (Model.AccountStatus != null)
+            {
+                <div>
+                    <label asp-for="AccountStatus"></label>
+                    <select asp-for="AccountStatus" class="form-control">
+                        <option>Active</option>
+                        <option>Inactive</option>
+                        <option>Suspended</option>
+                    </select>
+                </div>
+            }
+            <button class="btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+</div>

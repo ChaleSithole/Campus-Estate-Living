@@ -1,0 +1,37 @@
+@model PaymentCreateViewModel
+@{
+    ViewData["Title"] = "Record payment";
+}
+<div class="page">
+    <div class="card form-card">
+        <h1>Record a payment</h1>
+        <p><a class="btn-outline btn-sm" asp-action="Payments">← Back to payments</a></p>
+        <p class="muted">Choose a resident and active tariff. Confirm only after receiving cash or verifying an electronic payment.</p>
+        <form asp-action="Record" method="post" class="form-grid" data-confirm-payment>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div>
+                <label>Resident</label>
+                <select name="accountId" class="form-control" asp-items="ViewBag.Accounts" required><option value="">Choose a resident</option></select>
+            </div>
+            <div>
+                <label>Service and tariff</label>
+                <select asp-for="TariffId" class="form-control" data-tariff-select required><option value="">Choose a tariff</option>@foreach (var t in Model.AvailableTariffs) { <option value="@t.TariffId" data-amount="@t.Amount" data-category="@t.CategoryId">@t.Category.CategoryName — @t.TariffName</option> }</select>
+            </div>
+            <input type="hidden" asp-for="CategoryId" data-category-input /><div><label asp-for="Amount">Amount due</label><input asp-for="Amount" class="form-control" readonly data-amount-input /></div>
+            <div>
+                <label asp-for="PaymentMethod"></label>
+                <select asp-for="PaymentMethod" class="form-control">
+                    <option value="EFT">Electronic payment (EFT)</option>
+                    <option value="Cash">Cash</option>
+                </select>
+            </div>
+            <div class="alert alert-info">Cash payments are recorded as received by the signed-in financial officer. Card and mobile wallet processing require a payment gateway.</div>
+            <div>
+                <label asp-for="Notes"></label>
+                <input asp-for="Notes" class="form-control" />
+            </div>
+            <button class="btn-primary" type="submit">Record payment</button>
+        </form>
+    </div>
+</div>
+<div class="modal-backdrop" data-payment-modal hidden><section class="confirm-modal" role="dialog" aria-modal="true"><h2>Confirm Payment</h2><p>You are about to record <strong data-confirm-amount>R0.00</strong> for <strong data-confirm-service>the selected service</strong>.</p><div class="toolbar"><button class="btn-outline" type="button" data-cancel-payment>Cancel</button><button class="btn-gold" type="button" data-accept-payment>Confirm Payment</button></div></section></div>

@@ -1,0 +1,28 @@
+@model ReviewCreateViewModel
+@{
+    ViewData["Title"] = "Review";
+}
+<div class="page">
+    <div class="card form-card">
+        <h1>Rate Campus Estate Living</h1>
+        <p><a class="btn-outline btn-sm" asp-controller="Home" asp-action="Dashboard">← Back to dashboard</a></p>
+        <form asp-action="Create" method="post" class="form-grid">
+            <div>
+                <label asp-for="Rating"></label>
+                <select asp-for="Rating" class="form-control">
+                    <option value="5">5 — Excellent</option>
+                    <option value="4">4 — Good</option>
+                    <option value="3">3 — Average</option>
+                    <option value="2">2 — Poor</option>
+                    <option value="1">1 — Very poor</option>
+                </select>
+            </div>
+            <div>
+                <label asp-for="Comment"></label>
+                <textarea asp-for="Comment" class="form-control"></textarea>
+                <span asp-validation-for="Comment"></span>
+            </div>
+            <button class="btn-primary" type="submit">Submit review</button>
+        </form>
+    </div>
+</div>

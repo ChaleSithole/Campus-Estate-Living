@@ -1,0 +1,64 @@
+@model ApplicationUser
+@{
+    ViewData["Title"] = Model.Person.FullName;
+    var roles = (IList<string>)ViewBag.Roles;
+    var linked = ViewBag.Linked as List<ApplicationUser> ?? [];
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <div>
+            <p class="kicker">User account</p>
+            <h1>@Model.Person.FullName</h1>
+        </div>
+        <div class="toolbar">
+            <a class="btn-outline" asp-action="EditUser" asp-route-id="@Model.Id">Edit</a>
+            <a class="btn-outline" asp-action="AssignRoom" asp-route-userId="@Model.Id">Assign room</a>
+            <form asp-action="DeactivateUser" asp-route-id="@Model.Id" method="post">
+                <button class="btn-danger btn-sm" type="submit">Deactivate</button>
+            </form>
+        </div>
+    </div>
+    <div class="cards-2">
+        <div class="card">
+            <p>@Model.Email · @Model.UserNumber</p>
+            <p>@foreach (var r in roles) { <partial name="_Status" model="r" /> }</p>
+            <p>Phone @(Model.Person.PhoneNumber ?? "—")</p>
+            <p>Person ID @Model.PersonId · User ID @Model.Id</p>
+            @if (Model.EstateAccount != null)
+            {
+                <p>Estate account @Model.EstateAccount.AccountNumber · @Model.EstateAccount.AccountStatus</p>
+            }
+            else
+            {
+                <p class="muted">No estate account on this login (expected for Administrator and Financial Officer accounts).</p>
+            }
+        </div>
+        <div class="card">
+            <h3>Room assignments</h3>
+            @if (!Model.RoomAssignments.Any())
+            {
+                <p class="muted">None.</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var a in Model.RoomAssignments.OrderByDescending(x => x.MoveInDate))
+                    {
+                        <li>@a.Room.Property.BuildingName @a.Room.RoomNumber · @a.MoveInDate.ToString("dd MMM yyyy") @(a.MoveOutDate == null ? "(current)" : "– " + a.MoveOutDate.Value.ToString("dd MMM yyyy"))</li>
+                    }
+                </ul>
+            }
+            @if (linked.Any())
+            {
+                <h3>Other logins for this person</h3>
+                <ul>
+                    @foreach (var u in linked)
+                    {
+                        <li><a asp-action="UserDetails" asp-route-id="@u.Id">@u.Email</a> — @string.Join(", ", u.UserRoles.Select(r => r.Role.Name))</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>

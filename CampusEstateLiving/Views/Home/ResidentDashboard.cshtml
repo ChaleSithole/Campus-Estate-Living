@@ -1,0 +1,120 @@
+@model ResidentDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head reveal">
+        <div>
+            <p class="kicker">@Model.Role account</p>
+            <h1>@Model.Greeting, @Model.FullName.Split(' ').First()</h1>
+            <p class="muted" style="margin:0">
+                @(Model.RoomLabel ?? "No room assigned yet")
+                @if (Model.AccountNumber != null) { <span> · Account @Model.AccountNumber</span> }
+            </p>
+        </div>
+        <div class="toolbar">
+            <a class="btn-gold" asp-controller="Payments" asp-action="Create">Make a payment</a>
+            <a class="btn-outline" asp-controller="Payments" asp-action="Statement">Statement</a>
+            <a class="btn-outline" asp-controller="Accommodation" asp-action="Index">My room</a>
+        </div>
+    </div>
+
+    <div class="cards-4" style="margin-bottom:1rem">
+        <div class="card reveal"><div class="stat-value">@Model.ConfirmedThisMonth.ToString("C")</div><div class="stat-label">Confirmed this month</div></div>
+        <div class="card reveal" style="--d:40ms"><div class="stat-value">@Model.PendingTotal.ToString("C")</div><div class="stat-label">Awaiting verification</div></div>
+        <div class="card reveal" style="--d:80ms"><div class="stat-value">@Model.UnreadNotifications</div><div class="stat-label">Unread notices</div></div>
+        <div class="card reveal" style="--d:120ms"><div class="stat-value">@Model.OpenMaintenance</div><div class="stat-label">Open maintenance</div></div>
+    </div>
+
+    @if (Model.Notices.Any())
+    {
+        <div class="card reveal" style="margin-bottom:1rem">
+            <div class="page-head" style="margin-bottom:0.4rem">
+                <h3 style="margin:0">Estate notices</h3>
+                <a class="btn-outline btn-sm" asp-controller="Notices" asp-action="Index">All notices</a>
+            </div>
+            @foreach (var n in Model.Notices)
+            {
+                <div class="notice-inline">
+                    <strong>@n.Title</strong>
+                    <p class="muted" style="margin:0.2rem 0 0">@(n.Body.Length > 180 ? n.Body[..180] + "…" : n.Body)</p>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="card reveal" style="margin-bottom:1rem">
+        <div class="page-head" style="margin-bottom:0.6rem">
+            <h3 style="margin:0">This month’s services</h3>
+            <a class="btn-outline btn-sm" asp-controller="Payments" asp-action="Create">Pay a service</a>
+        </div>
+        <div class="table-wrap">
+            <table class="data">
+                <thead><tr><th>Service</th><th>Status</th><th>Amount</th></tr></thead>
+                <tbody>
+                @foreach (var row in Model.ServiceStatuses)
+                {
+                    <tr>
+                        <td>@row.CategoryName</td>
+                        <td><partial name="_Status" model="row.Status" /></td>
+                        <td>@(row.Amount?.ToString("C") ?? "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="split">
+        <div class="card reveal">
+            <h3>Recent payments</h3>
+            @if (!Model.RecentPayments.Any())
+            {
+                <p class="empty">No payments yet. Start with rent or another estate service.</p>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="data">
+                        <thead><tr><th>Date</th><th>Service</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var p in Model.RecentPayments)
+                        {
+                            <tr>
+                                <td>@SaTime.FormatDate(p.PaymentDate)</td>
+                                <td>@p.Category.CategoryName</td>
+                                <td>@p.Amount.ToString("C")</td>
+                                <td><partial name="_Status" model="p.PaymentStatus.StatusName" /></td>
+                                <td><a asp-controller="Payments" asp-action="Receipt" asp-route-id="@p.PaymentId">Receipt</a></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+        <div class="card reveal" style="--d:80ms">
+            <h3>Notices to you</h3>
+            @if (!Model.LatestNotifications.Any())
+            {
+                <p class="empty">Nothing new.</p>
+            }
+            else
+            {
+                @foreach (var n in Model.LatestNotifications)
+                {
+                    <div class="notice-inline">
+                        <strong>@n.Title</strong>
+                        <div class="muted">@n.Message</div>
+                    </div>
+                }
+            }
+            <div class="toolbar" style="margin-top:0.8rem">
+                <a class="btn-outline btn-sm" asp-controller="Notifications" asp-action="Index">All notices</a>
+                <a class="btn-outline btn-sm" asp-controller="Maintenance" asp-action="Create">Log maintenance</a>
+                <a class="btn-outline btn-sm" asp-controller="Reviews" asp-action="Create">Leave a review</a>
+            </div>
+        </div>
+    </div>
+</div>

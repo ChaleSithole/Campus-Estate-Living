@@ -1,0 +1,75 @@
+@model List<RoomAssignment>
+@{
+    ViewData["Title"] = "Accommodation";
+    var current = ViewBag.Current as RoomAssignment;
+    var roommates = ViewBag.Roommates as List<ApplicationUser> ?? [];
+    var account = ViewBag.Account as EstateAccount;
+    var rent = (decimal)ViewBag.MonthlyRent;
+}
+<div class="page">
+    <div class="page-head">
+        <div>
+            <p class="kicker">Residence</p>
+            <h1>My accommodation</h1>
+        </div>
+        <a class="btn-gold" asp-controller="Payments" asp-action="Create">Pay rent</a>
+    </div>
+    <div class="cards-2">
+        <div class="card">
+            @if (current == null)
+            {
+                <h3>No active assignment</h3>
+                <p class="muted">The estate office has not assigned a room to this account yet.</p>
+            }
+            else
+            {
+                <p class="kicker">@current.Room.Property.BuildingCode</p>
+                <h2>@current.Room.Property.BuildingName · Room @current.Room.RoomNumber</h2>
+                <p>@current.Room.RoomType.RoomTypeName · capacity @current.Room.RoomType.Capacity</p>
+                <p class="muted">@current.Room.Property.Address</p>
+                <p>Moved in @current.MoveInDate.ToString("dd MMM yyyy")</p>
+                @if (roommates.Any())
+                {
+                    <p><strong>Roommate</strong><br />@string.Join(", ", roommates.Select(r => r.Person.FullName))</p>
+                }
+            }
+        </div>
+        <div class="card">
+            <h3>Accommodation overview</h3>
+            @if (current == null)
+            {
+                <p class="muted">Your accommodation details will appear here after room assignment.</p>
+            }
+            else
+            {
+                <p><strong>Estate</strong><br />UFS QwaQwa Campus</p>
+                <p><strong>Building / room</strong><br />@current.Room.Property.BuildingName · @current.Room.RoomNumber</p>
+                <p><strong>Room type / occupancy</strong><br />@current.Room.RoomType.RoomTypeName · @roommates.Count + 1 / @current.Room.RoomType.Capacity residents</p>
+                <p><strong>Move-in date</strong><br />@current.MoveInDate.ToString("dd MMM yyyy")</p>
+                <p><strong>Monthly rent</strong><br />@(rent > 0 ? rent.ToString("C") : "See current rent tariff")</p>
+                <p><strong>Status</strong><br /><partial name="_Status" model='"Active"' /></p>
+                <p><strong>Roommate</strong><br />@(roommates.Any() ? string.Join(", ", roommates.Select(r => r.Person.FullName)) : "No roommate assigned")</p>
+            }
+        </div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+        <h3>Assignment history</h3>
+        <div class="table-wrap">
+            <table class="data">
+                <thead><tr><th>Building</th><th>Room</th><th>Type</th><th>Move in</th><th>Move out</th></tr></thead>
+                <tbody>
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td>@a.Room.Property.BuildingName</td>
+                        <td>@a.Room.RoomNumber</td>
+                        <td>@a.Room.RoomType.RoomTypeName</td>
+                        <td>@a.MoveInDate.ToString("dd MMM yyyy")</td>
+                        <td>@(a.MoveOutDate?.ToString("dd MMM yyyy") ?? "Current")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

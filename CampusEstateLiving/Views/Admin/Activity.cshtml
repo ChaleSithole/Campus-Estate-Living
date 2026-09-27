@@ -1,0 +1,42 @@
+@model List<Payment>
+@{
+    ViewData["Title"] = "Activity";
+    var notices = ViewBag.Notifications as List<Notification> ?? [];
+    var assignments = ViewBag.Assignments as List<RoomAssignment> ?? [];
+}
+<div class="page">
+    <h1>Estate activity</h1>
+    <div class="split" style="margin-top:1rem">
+        <div class="card">
+            <h3>Payments</h3>
+            @foreach (var p in Model)
+            {
+                <div style="padding:0.5rem 0;border-bottom:1px solid var(--line)">
+                    @p.Account.User.Person.FullName · @p.Category.CategoryName · @p.Amount.ToString("C")
+                    <div class="muted">@p.PaymentStatus.StatusName · @SaTime.Format(p.PaymentDate)</div>
+                </div>
+            }
+        </div>
+        <div>
+            <div class="card" style="margin-bottom:1rem">
+                <h3>Assignments</h3>
+                @foreach (var a in assignments)
+                {
+                    <div style="padding:0.4rem 0;border-bottom:1px solid var(--line)">
+                        @a.User.Person.FullName → @a.Room.Property.BuildingName @a.Room.RoomNumber
+                    </div>
+                }
+            </div>
+            <div class="card">
+                <h3>Notifications</h3>
+                @foreach (var n in notices.Take(12))
+                {
+                    <div style="padding:0.4rem 0;border-bottom:1px solid var(--line)">
+                        <strong>@n.User.Person.FullName</strong> · @n.Title
+                        <div class="muted">@SaTime.Format(n.CreatedAt)</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

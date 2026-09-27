@@ -1,0 +1,36 @@
+@model AnnouncementCreateViewModel
+@{
+    ViewData["Title"] = "Post a notice";
+}
+<div class="page">
+    <div class="card form-card reveal">
+        <p class="kicker">Administrator</p>
+        <h1>Post a notice</h1>
+        <p><a class="btn-outline btn-sm" asp-action="Index">← Back to notices</a></p>
+        <form asp-action="Create" method="post" class="form-grid">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div>
+                <label asp-for="Title"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title"></span>
+            </div>
+            <div>
+                <label asp-for="Body"></label>
+                <textarea asp-for="Body" class="form-control" rows="6"></textarea>
+                <span asp-validation-for="Body"></span>
+            </div>
+            <div>
+                <label asp-for="Audience"></label>
+                <select asp-for="Audience" class="form-control">
+                    <option value="All">Everyone</option>
+                    <option value="Residents">Residents only</option>
+                    <option value="Officers">Officers only</option>
+                </select>
+            </div>
+            <label class="remember">
+                <input asp-for="IsPinned" /> Pin to the top of the board
+            </label>
+            <button class="btn-gold" type="submit">Publish</button>
+        </form>
+    </div>
+</div>

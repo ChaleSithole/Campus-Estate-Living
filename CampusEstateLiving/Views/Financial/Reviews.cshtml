@@ -1,0 +1,25 @@
+@model List<Review>
+@{
+    ViewData["Title"] = "Reviews";
+}
+<div class="page">
+    <h1>Resident reviews</h1>
+    <div class="card" style="margin-top:1rem">
+        @if (!Model.Any())
+        {
+            <p class="empty">No reviews yet.</p>
+        }
+        else
+        {
+            @foreach (var r in Model)
+            {
+                <div style="padding:0.9rem 0;border-bottom:1px solid var(--line)">
+                    <div class="stars">@(new string('★', r.Rating))@(new string('☆', 5 - r.Rating))</div>
+                    <strong>@r.User.Person.FullName</strong>
+                    <p>@r.Comment</p>
+                    <div class="muted">@SaTime.Format(r.CreatedAt)</div>
+                </div>
+            }
+        }
+    </div>
+</div>

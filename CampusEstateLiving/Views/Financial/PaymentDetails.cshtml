@@ -1,0 +1,37 @@
+@model Payment
+@{
+    ViewData["Title"] = Model.ReferenceNumber;
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="card reveal" style="max-width:680px">
+        <p class="kicker">@Model.ReferenceNumber</p>
+        <h1>@Model.Account.User.Person.FullName</h1>
+        <p class="stat-value">@Model.Amount.ToString("C")</p>
+        <p>@Model.Category.CategoryName · @Model.PaymentMethod · <partial name="_Status" model="Model.PaymentStatus.StatusName" /></p>
+        <p class="muted">@SaTime.Format(Model.PaymentDate) · Account @Model.Account.AccountNumber</p>
+        @if (Model.SavedCard != null)
+        {
+            <p>Card @Model.SavedCard.Brand @CardHelper.Mask(Model.SavedCard.Last4)</p>
+        }
+        @if (Model.ProcessedByUser != null)
+        {
+            <p>Processed by @Model.ProcessedByUser.Person.FullName
+                @if (Model.ProcessedAt.HasValue) { <text> · @SaTime.Format(Model.ProcessedAt.Value)</text> }
+            </p>
+        }
+        <div class="toolbar" style="margin-top:1rem">
+            <a class="btn-gold" asp-action="Receipt" asp-route-id="@Model.PaymentId">Receipt</a>
+            @if (Model.PaymentStatus.StatusName == PaymentStatusNames.Pending)
+            {
+                <form asp-action="Confirm" asp-route-id="@Model.PaymentId" method="post">
+                    <button class="btn-ok" type="submit">Confirm payment</button>
+                </form>
+                <form asp-action="Fail" asp-route-id="@Model.PaymentId" method="post">
+                    <button class="btn-danger" type="submit">Mark failed</button>
+                </form>
+            }
+        </div>
+        <p style="margin-top:1rem"><a asp-action="Payments">Back to payments</a></p>
+    </div>
+</div>

@@ -1,0 +1,262 @@
+﻿```cshtml
+@model Payment
+
+@{
+    ViewData["Title"] = "Payment Details";
+    var status = Model.PaymentStatus.StatusName;
+    var isPending = status == PaymentStatusNames.Pending;
+}
+
+<div class="page">
+
+    <partial name="_Alerts" />
+
+    <div class="page-head">
+        <div>
+            <h1>Payment details</h1>
+            <p class="muted">
+                Review the payment before processing it.
+            </p>
+        </div>
+
+        <a class="btn-outline"
+           asp-action="Payments">
+            Back to payments
+        </a>
+    </div>
+
+    <!-- Payment information -->
+    <div class="split" style="margin-top:1rem">
+
+        <div class="card">
+
+            <h3>Payment information</h3>
+
+            <div style="display:grid;gap:.8rem;margin-top:1rem">
+
+                <div>
+                    <div class="muted">Reference</div>
+                    <strong>@Model.ReferenceNumber</strong>
+                </div>
+
+                <div>
+                    <div class="muted">Resident</div>
+                    <strong>
+                        @Model.Account.User.Person.FullName
+                    </strong>
+                </div>
+
+                <div>
+                    <div class="muted">Account</div>
+                    @Model.Account.AccountNumber
+                </div>
+
+                <div>
+                    <div class="muted">Category</div>
+                    @Model.Category.CategoryName
+                </div>
+
+                <div>
+                    <div class="muted">Amount</div>
+                    <strong>@Model.Amount.ToString("C")</strong>
+                </div>
+
+                <div>
+                    <div class="muted">Payment method</div>
+                    @Model.PaymentMethod
+                </div>
+
+                <div>
+                    <div class="muted">Payment date</div>
+                    @SaTime.Format(Model.PaymentDate)
+                </div>
+
+                <div>
+                    <div class="muted">Resident notes</div>
+
+                    @if (string.IsNullOrWhiteSpace(Model.Notes))
+                    {
+                        <span class="muted">No notes provided.</span>
+                    }
+                    else
+                    {
+                        @Model.Notes
+                    }
+                </div>
+
+                <div>
+                    <div class="muted">Status</div>
+
+                    @if (status == PaymentStatusNames.Pending)
+                    {
+                        <span class="status-badge status-warning">
+                            Pending
+                        </span>
+                    }
+                    else if (status == PaymentStatusNames.Confirmed)
+                    {
+                        <span class="status-badge status-success">
+                            Confirmed
+                        </span>
+                    }
+                    else if (status == PaymentStatusNames.Failed)
+                    {
+                        <span class="status-badge status-danger">
+                            Failed
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="status-badge">
+                            @status
+                        </span>
+                    }
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Processing -->
+        <div class="card">
+
+            <h3>Processing</h3>
+
+            @if (isPending)
+            {
+                <p class="muted" style="margin-top:.5rem">
+                    Verify the payment details before choosing an outcome.
+                </p>
+
+                <form method="post"
+                      asp-action="Confirm"
+                      style="margin-top:1.25rem">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="id"
+                           value="@Model.PaymentId" />
+
+                    <div class="form-group">
+                        <label for="confirmNotes">
+                            Verification notes
+                        </label>
+
+                        <textarea id="confirmNotes"
+                                  name="processingNotes"
+                                  class="form-control"
+                                  rows="4"
+                                  maxlength="500"
+                                  placeholder="Optional verification notes..."></textarea>
+                    </div>
+
+                    <button type="submit"
+                            class="btn-gold"
+                            onclick="return confirm('Confirm this payment?');">
+                        Confirm payment
+                    </button>
+
+                </form>
+
+                <hr style="margin:1.5rem 0;border:0;border-top:1px solid var(--line)" />
+
+                <form method="post"
+                      asp-action="Fail">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="id"
+                           value="@Model.PaymentId" />
+
+                    <div class="form-group">
+                        <label for="failNotes">
+                            Reason for failure
+                        </label>
+
+                        <textarea id="failNotes"
+                                  name="processingNotes"
+                                  class="form-control"
+                                  rows="4"
+                                  maxlength="500"
+                                  required
+                                  placeholder="Explain why this payment failed..."></textarea>
+                    </div>
+
+                    <button type="submit"
+                            class="btn-outline"
+                            onclick="return confirm('Mark this payment as failed?');">
+                        Mark as failed
+                    </button>
+
+                </form>
+            }
+            else
+            {
+                <div style="margin-top:1rem">
+
+                    <p>
+                        This payment has already been processed.
+                    </p>
+
+                    <div style="display:grid;gap:.8rem">
+
+                        <div>
+                            <div class="muted">Processed by</div>
+
+                            @if (Model.ProcessedByUser?.Person != null)
+                            {
+                                <strong>
+                                    @Model.ProcessedByUser.Person.FullName
+                                </strong>
+                            }
+                            else
+                            {
+                                <span class="muted">
+                                    Not recorded
+                                </span>
+                            }
+                        </div>
+
+                        <div>
+                            <div class="muted">Processed at</div>
+
+                            @if (Model.ProcessedAt.HasValue)
+                            {
+                                @SaTime.Format(Model.ProcessedAt.Value)
+                            }
+                            else
+                            {
+                                <span class="muted">
+                                    Not recorded
+                                </span>
+                            }
+                        </div>
+
+                        <div>
+                            <div class="muted">Processing notes</div>
+
+                            @if (string.IsNullOrWhiteSpace(Model.ProcessingNotes))
+                            {
+                                <span class="muted">
+                                    No processing notes.
+                                </span>
+                            }
+                            else
+                            {
+                                @Model.ProcessingNotes
+                            }
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</div>
+```

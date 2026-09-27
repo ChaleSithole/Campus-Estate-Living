@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Management";
+    var tariffs = ViewBag.Tariffs as List<Tariff> ?? [];
+    var roomTypes = ViewBag.RoomTypes as List<RoomType> ?? [];
+    var properties = ViewBag.Properties as List<Property> ?? [];
+    var services = ViewBag.Services as List<PaymentCategory> ?? [];
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head"><div><p class="kicker">Administrator controls</p><h1>Management</h1></div></div>
+    <div class="cards-2">
+        <section class="card"><h2>Tariffs & pricing</h2><p class="muted">Active prices and service configuration</p><div class="table-wrap"><table class="data"><thead><tr><th>Service</th><th>Tariff</th><th>Price</th><th>Status</th></tr></thead><tbody>@foreach (var tariff in tariffs) { <tr><td>@tariff.Category.CategoryName</td><td>@tariff.TariffName</td><td>@tariff.Amount.ToString("C")</td><td>@(tariff.IsActive ? "Active" : "Inactive")</td></tr> }</tbody></table></div><a class="btn-outline" asp-controller="Admin" asp-action="Tariffs">Manage tariffs</a></section>
+        <section class="card"><h2>Accommodation rules</h2><p>Gender matching is enforced on every sharing room assignment.</p>@foreach (var type in roomTypes) { <p><strong>@type.RoomTypeName</strong> · maximum @type.Capacity occupant(s)</p> }<p>@properties.Count building(s) configured</p><a class="btn-outline" asp-controller="Admin" asp-action="Rooms">Buildings and rooms</a> <a class="btn-outline" asp-controller="Admin" asp-action="Assignments">Room allocation</a></section>
+        <section class="card"><h2>Estate services</h2>@foreach (var service in services) { <p>@service.CategoryName <span class="muted">· configured</span></p> }<a class="btn-outline" asp-controller="Admin" asp-action="Tariffs">Configure services</a></section>
+        <section class="card"><h2>System settings</h2><p>Estate: UFS QwaQwa Campus</p><p>Estate office: 058 718 5000</p><p>Payment configuration: Card processing requires a gateway. EFT and officer-recorded cash are available.</p></section>
+    </div>
+</div>

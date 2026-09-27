@@ -1,0 +1,130 @@
+@model Payment
+@{
+    ViewData["Title"] = "Receipt " + Model.ReferenceNumber;
+    var confirmed = Model.PaymentStatus.StatusName == PaymentStatusNames.Confirmed;
+    var person = Model.Account.User.Person;
+}
+<div class="page receipt-page">
+    <partial name="_Alerts" />
+    <div class="toolbar no-print" style="margin-bottom:1rem">
+        <button class="btn-gold" type="button" onclick="window.print()">Print receipt</button>
+        @if (User.IsInRole(AppRoles.Student) || User.IsInRole(AppRoles.Staff))
+        {
+            <a class="btn-outline" asp-controller="Payments" asp-action="Index">Payment history</a>
+            <a class="btn-outline" asp-controller="Payments" asp-action="Details" asp-route-id="@Model.PaymentId">Details</a>
+        }
+        else
+        {
+            <a class="btn-outline" asp-controller="Financial" asp-action="PaymentDetails" asp-route-id="@Model.PaymentId">Payment file</a>
+            <a class="btn-outline" asp-controller="Financial" asp-action="Payments">All payments</a>
+        }
+    </div>
+
+    <article class="receipt reveal">
+        <header class="receipt-head">
+            <div>
+                <img src="~/images/logo-sm.png" alt="Campus Estate Living" />
+                <p class="kicker">University of the Free State · QwaQwa Campus</p>
+                <h1>@(confirmed ? "Official receipt" : "Payment acknowledgement")</h1>
+            </div>
+            <div class="receipt-ref">
+                <span>Reference</span>
+                <strong>@Model.ReferenceNumber</strong>
+                <partial name="_Status" model="Model.PaymentStatus.StatusName" />
+            </div>
+        </header>
+
+        <p class="receipt-lede">
+            @if (confirmed)
+            {
+                <text>This receipt confirms that the estate office has verified the payment below against estate account @Model.Account.AccountNumber.</text>
+            }
+            else
+            {
+                <text>This acknowledgement records a payment submitted for verification. It is not a tax invoice until a financial officer confirms it.</text>
+            }
+        </p>
+
+        <dl class="receipt-grid">
+            <div>
+                <dt>Received from</dt>
+                <dd>@person.FullName</dd>
+            </div>
+            <div>
+                <dt>Estate account</dt>
+                <dd>@Model.Account.AccountNumber</dd>
+            </div>
+            <div>
+                <dt>Service</dt>
+                <dd>@Model.Category.CategoryName</dd>
+            </div>
+            <div>
+                <dt>Method</dt>
+                <dd>@Model.PaymentMethod</dd>
+            </div>
+            <div>
+                <dt>Submitted</dt>
+                <dd>@SaTime.Format(Model.PaymentDate)</dd>
+            </div>
+            <div>
+                <dt>Processed</dt>
+                <dd>
+                    @if (Model.ProcessedAt.HasValue)
+                    {
+                        @SaTime.Format(Model.ProcessedAt.Value)
+                    }
+                    else
+                    {
+                        <text>Awaiting officer</text>
+                    }
+                </dd>
+            </div>
+        </dl>
+
+        @if (Model.SavedCard != null)
+        {
+            <p class="muted">Card @Model.SavedCard.Brand @CardHelper.Mask(Model.SavedCard.Last4)</p>
+        }
+
+        <table class="receipt-lines">
+            <thead>
+                <tr><th>Description</th><th>Amount</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        @Model.Category.CategoryName
+                        @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                        {
+                            <div class="muted">@Model.Notes</div>
+                        }
+                    </td>
+                    <td>@Model.Amount.ToString("C")</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>Total</th>
+                    <th>@Model.Amount.ToString("C")</th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <footer class="receipt-foot">
+            <div>
+                @if (Model.ProcessedByUser != null)
+                {
+                    <div>Verified by <strong>@Model.ProcessedByUser.Person.FullName</strong></div>
+                }
+                else
+                {
+                    <div>Not yet verified by the estate office.</div>
+                }
+                <div class="muted">Campus Estate Living · Phuthaditjhaba · 058 718 5000</div>
+            </div>
+            <div class="receipt-stamp @(confirmed ? "is-confirmed" : "is-pending")">
+                @(confirmed ? "CONFIRMED" : Model.PaymentStatus.StatusName.ToUpperInvariant())
+            </div>
+        </footer>
+    </article>
+</div>

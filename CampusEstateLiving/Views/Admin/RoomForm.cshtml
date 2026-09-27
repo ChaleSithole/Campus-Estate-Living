@@ -1,0 +1,31 @@
+@model RoomFormViewModel
+@{
+    ViewData["Title"] = "Add room";
+}
+<div class="page">
+    <div class="card form-card">
+        <h1>Add room</h1>
+        <p><a class="btn-outline btn-sm" asp-action="Rooms">← Back to rooms</a></p>
+        <form asp-action="CreateRoom" method="post" class="form-grid">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div>
+                <label asp-for="PropertyId"></label>
+                <select asp-for="PropertyId" class="form-control" asp-items="ViewBag.Properties"></select>
+            </div>
+            <div>
+                <label asp-for="RoomTypeId"></label>
+                <select asp-for="RoomTypeId" class="form-control" asp-items="ViewBag.RoomTypes"></select>
+            </div>
+            <div>
+                <label asp-for="RoomNumber"></label>
+                <input asp-for="RoomNumber" class="form-control" />
+                <span asp-validation-for="RoomNumber"></span>
+            </div>
+            <div>
+                <label asp-for="Notes"></label>
+                <input asp-for="Notes" class="form-control" />
+            </div>
+            <button class="btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,36 @@
+@model PropertyFormViewModel
+@{
+    ViewData["Title"] = "Add property";
+}
+<div class="page">
+    <div class="card form-card">
+        <h1>Add building</h1>
+        <p><a class="btn-outline btn-sm" asp-action="Properties">← Back to buildings</a></p>
+        <form asp-action="CreateProperty" method="post" class="form-grid">
+            <div>
+                <label asp-for="BuildingCode"></label>
+                <input asp-for="BuildingCode" class="form-control" />
+            </div>
+            <div>
+                <label asp-for="BuildingName"></label>
+                <input asp-for="BuildingName" class="form-control" />
+            </div>
+            <div>
+                <label asp-for="Address"></label>
+                <input asp-for="Address" class="form-control" />
+            </div>
+            <div>
+                <label asp-for="Description"></label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+            </div>
+            <div>
+                <label asp-for="PropertyStatus"></label>
+                <select asp-for="PropertyStatus" class="form-control">
+                    <option>Active</option>
+                    <option>Inactive</option>
+                </select>
+            </div>
+            <button class="btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,78 @@
+@model ReportViewModel
+@{
+    ViewData["Title"] = "Reports";
+}
+<div class="page">
+    <div class="page-head">
+        <h1>Financial report</h1>
+        <div class="toolbar no-print">
+            <button class="btn-outline" type="button" onclick="window.print()">Print</button>
+            <a class="btn-outline" asp-action="Export"
+               asp-route-from="@Model.From.ToString("yyyy-MM-dd")"
+               asp-route-to="@Model.To.ToString("yyyy-MM-dd")"
+               asp-route-categoryId="@Model.CategoryId"
+               asp-route-status="@Model.Status">Download CSV</a>
+        </div>
+    </div>
+    <partial name="_Alerts" />
+    <form method="get" class="card" style="margin-bottom:1rem">
+        <div class="form-grid two">
+            <div>
+                <label>From</label>
+                <input class="form-control" type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" />
+            </div>
+            <div>
+                <label>To</label>
+                <input class="form-control" type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" />
+            </div>
+            <div>
+                <label>Category</label>
+                <select class="form-control" name="categoryId" asp-items="ViewBag.Categories">
+                    <option value="">All services</option>
+                </select>
+            </div>
+            <div>
+                <label>Status</label>
+                <select class="form-control" name="status">
+                    <option value="">All</option>
+                    <option>Pending</option>
+                    <option>Confirmed</option>
+                    <option>Failed</option>
+                    <option>Cancelled</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn-primary" type="submit" style="margin-top:0.8rem">Run report</button>
+    </form>
+    <div class="cards-3" style="margin-bottom:1rem">
+        <div class="card"><div class="stat-value">@Model.Total.ToString("C")</div><div class="stat-label">Confirmed total</div></div>
+        <div class="card"><div class="stat-value">@Model.Payments.Count</div><div class="stat-label">Transactions</div></div>
+        <div class="card">
+            @foreach (var kv in Model.ByStatus)
+            {
+                <div>@kv.Key · @kv.Value</div>
+            }
+        </div>
+    </div>
+    <div class="card">
+        <h3>By service</h3>
+        <partial name="_CategoryBars" model="Model.ByCategory" />
+        <div class="table-wrap" style="margin-top:1rem">
+            <table class="data">
+                <thead><tr><th>Date</th><th>Resident</th><th>Service</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                @foreach (var p in Model.Payments)
+                {
+                    <tr>
+                        <td>@SaTime.FormatDate(p.PaymentDate)</td>
+                        <td>@p.Account.User.Person.FullName</td>
+                        <td>@p.Category.CategoryName</td>
+                        <td>@p.Amount.ToString("C")</td>
+                        <td>@p.PaymentStatus.StatusName</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

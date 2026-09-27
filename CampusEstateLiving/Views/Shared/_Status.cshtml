@@ -1,0 +1,26 @@
+@model string
+@{
+    var name = Model ?? "";
+    var cls = name.ToLowerInvariant() switch
+    {
+        "not paid" => "badge-cancelled",
+        "pending" => "badge-pending",
+        "confirmed" => "badge-confirmed",
+        "failed" => "badge-failed",
+        "cancelled" => "badge-cancelled",
+        "active" => "badge-active",
+        "inactive" => "badge-inactive",
+        "suspended" => "badge-suspended",
+        "administrator" => "badge-admin",
+        "financialofficer" => "badge-officer",
+        "student" => "badge-student",
+        "staff" => "badge-staff",
+        _ => "badge-pending"
+    };
+    var label = name switch
+    {
+        "FinancialOfficer" => "Financial Officer",
+        _ => name
+    };
+}
+<span class="badge @cls">@label</span>

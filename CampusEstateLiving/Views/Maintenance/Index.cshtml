@@ -1,0 +1,59 @@
+@model List<MaintenanceRequest>
+@{
+    ViewData["Title"] = "Maintenance";
+    var staff = (bool)(ViewBag.IsStaffSide ?? false);
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <div>
+            <p class="kicker">Estate works</p>
+            <h1>@(staff ? "Maintenance queue" : "My maintenance")</h1>
+        </div>
+        <div class="toolbar">
+            @if (!staff)
+            {
+                <a class="btn-gold" asp-action="Create">Log a request</a>
+            }
+            <a class="btn-outline btn-sm" asp-action="Index">All</a>
+            <a class="btn-outline btn-sm" asp-action="Index" asp-route-status="Open">Open</a>
+            <a class="btn-outline btn-sm" asp-action="Index" asp-route-status="In progress">In progress</a>
+        </div>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="card empty">No maintenance requests@(string.IsNullOrEmpty(ViewBag.Status as string) ? "." : " in this filter.")</div>
+    }
+    else
+    {
+        <div class="table-wrap card">
+            <table class="data">
+                <thead>
+                    <tr>
+                        @if (staff) { <th>Resident</th> }
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Logged</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        @if (staff) { <td>@r.User.Person.FullName</td> }
+                        <td>@r.Title</td>
+                        <td>@r.Category</td>
+                        <td>@r.Priority</td>
+                        <td><span class="badge @(r.Status == MaintenanceStatuses.Open ? "badge-pending" : r.Status == MaintenanceStatuses.Resolved ? "badge-confirmed" : "badge-admin")">@r.Status</span></td>
+                        <td>@SaTime.FormatDate(r.CreatedAt)</td>
+                        <td><a asp-action="Details" asp-route-id="@r.RequestId">Open</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

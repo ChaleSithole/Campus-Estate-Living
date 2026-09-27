@@ -1,0 +1,37 @@
+@model Payment
+@{
+    ViewData["Title"] = "Payment " + Model.ReferenceNumber;
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="card reveal" style="max-width:640px">
+        <p class="kicker">@Model.ReferenceNumber</p>
+        <h1>@Model.Category.CategoryName</h1>
+        <p class="stat-value">@Model.Amount.ToString("C")</p>
+        <p><partial name="_Status" model="Model.PaymentStatus.StatusName" /> · @Model.PaymentMethod · @SaTime.Format(Model.PaymentDate)</p>
+        @if (Model.SavedCard != null)
+        {
+            <p class="muted">Charged to @Model.SavedCard.Brand @CardHelper.Mask(Model.SavedCard.Last4)</p>
+        }
+        @if (Model.ProcessedByUser != null)
+        {
+            <p class="muted">Processed by @Model.ProcessedByUser.Person.FullName
+                @if (Model.ProcessedAt.HasValue) { <text> · @SaTime.Format(Model.ProcessedAt.Value)</text> }
+            </p>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Notes))
+        {
+            <p>@Model.Notes</p>
+        }
+        <div class="toolbar" style="margin-top:1rem">
+            <a class="btn-gold" asp-action="Receipt" asp-route-id="@Model.PaymentId">View receipt</a>
+            @if (Model.PaymentStatus.StatusName == PaymentStatusNames.Pending)
+            {
+                <form asp-action="Cancel" asp-route-id="@Model.PaymentId" method="post">
+                    <button class="btn-outline" type="submit">Cancel this payment</button>
+                </form>
+            }
+        </div>
+        <p style="margin-top:1rem"><a asp-action="Index">Back to history</a></p>
+    </div>
+</div>

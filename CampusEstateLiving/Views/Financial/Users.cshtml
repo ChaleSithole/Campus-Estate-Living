@@ -1,0 +1,33 @@
+@model List<ApplicationUser>
+@{
+    ViewData["Title"] = "Residents";
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <h1>Residents</h1>
+    </div>
+    <form method="get" class="toolbar" style="margin-bottom:1rem">
+        <input class="form-control" name="q" value="@ViewBag.Q" placeholder="Name, email, account" style="max-width:280px" />
+        <button class="btn-outline" type="submit">Search</button>
+    </form>
+    <div class="card">
+        <div class="table-wrap">
+            <table class="data">
+                <thead><tr><th>Name</th><th>Email</th><th>Account</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr>
+                        <td>@u.Person.FullName</td>
+                        <td>@u.Email</td>
+                        <td>@u.EstateAccount?.AccountNumber</td>
+                        <td><partial name="_Status" model="@(u.EstateAccount?.AccountStatus ?? "Inactive")" /></td>
+                        <td><a asp-action="UserDetails" asp-route-id="@u.Id">Open</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

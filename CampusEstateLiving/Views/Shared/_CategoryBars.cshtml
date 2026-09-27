@@ -1,0 +1,22 @@
+@model Dictionary<string, decimal>
+@{
+    var max = Model.Count == 0 ? 0 : Model.Values.Max();
+}
+@if (!Model.Any())
+{
+    <p class="empty">No confirmed payments in this period.</p>
+}
+else
+{
+    @foreach (var kv in Model.OrderByDescending(x => x.Value))
+    {
+        var width = max == 0 ? 0 : (int)Math.Round(kv.Value / max * 100);
+        <div class="meter">
+            <div class="meter-row">
+                <span>@kv.Key</span>
+                <strong>@kv.Value.ToString("C")</strong>
+            </div>
+            <div class="meter-track"><span style="width:@width%"></span></div>
+        </div>
+    }
+}

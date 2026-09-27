@@ -1,0 +1,35 @@
+@model List<Room>
+@{
+    ViewData["Title"] = "Rooms";
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <h1>Rooms</h1>
+        <div class="toolbar">
+            <a class="btn-gold" asp-action="CreateRoom">Add room</a>
+            <a class="btn-outline" asp-action="Properties">Buildings</a>
+            <a class="btn-outline" asp-action="Assignments">Assignments</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="table-wrap">
+            <table class="data">
+                <thead><tr><th>Building</th><th>Room</th><th>Type</th><th>Capacity</th><th>Occupants</th></tr></thead>
+                <tbody>
+                @foreach (var r in Model)
+                {
+                    var used = r.Assignments.Count(a => a.MoveOutDate == null);
+                    <tr>
+                        <td>@r.Property.BuildingName</td>
+                        <td>@r.RoomNumber</td>
+                        <td>@r.RoomType.RoomTypeName</td>
+                        <td>@r.RoomType.Capacity</td>
+                        <td>@used / @r.RoomType.Capacity</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

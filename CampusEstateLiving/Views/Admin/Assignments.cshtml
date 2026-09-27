@@ -1,0 +1,266 @@
+```cshtml
+@model List<RoomAssignment>
+
+@{
+    ViewData["Title"] = "Assignments";
+}
+
+<div class="page">
+
+    <partial name="_Alerts" />
+
+    <div class="page-head">
+        <div>
+            <h1>Room assignments</h1>
+            <p class="muted">
+                Manage current and historical campus accommodation assignments.
+            </p>
+        </div>
+
+        <a class="btn-gold" asp-action="AssignRoom">
+            Assign room
+        </a>
+    </div>
+
+    <!-- Room Availability -->
+    @{
+        var rooms = ViewBag.Rooms as List<Room> ?? [];
+    }
+
+    <div class="card" style="margin-bottom:1rem">
+
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--line)">
+            <h3 style="margin:0">Room availability</h3>
+            <div class="muted">
+                Current occupancy across active estate rooms.
+            </div>
+        </div>
+
+        @if (!rooms.Any())
+        {
+            <div style="padding:1.5rem">
+                <span class="muted">
+                    No active rooms are currently available.
+                </span>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="data">
+
+                    <thead>
+                        <tr>
+                            <th>Building</th>
+                            <th>Room</th>
+                            <th>Type</th>
+                            <th>Occupancy</th>
+                            <th>Available</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var room in rooms)
+                        {
+                            var capacity = room.RoomType.Capacity;
+
+                            var occupants = room.Assignments
+                                .Count(a => a.MoveOutDate == null);
+
+                            var available = capacity - occupants;
+
+                            var status =
+                                occupants == 0
+                                    ? "Available"
+                                    : occupants >= capacity
+                                        ? "Full"
+                                        : "Partially occupied";
+
+                            <tr>
+
+                                <td>
+                                    @room.Property.BuildingName
+                                </td>
+
+                                <td>
+                                    <strong>@room.RoomNumber</strong>
+                                </td>
+
+                                <td>
+                                    @room.RoomType.RoomTypeName
+                                </td>
+
+                                <td>
+                                    @occupants / @capacity
+                                </td>
+
+                                <td>
+                                    @available
+                                </td>
+
+                                <td>
+                                    @if (status == "Available")
+                                    {
+                                        <span class="status-badge status-success">
+                                            Available
+                                        </span>
+                                    }
+                                    else if (status == "Partially occupied")
+                                    {
+                                        <span class="status-badge status-warning">
+                                            Partially occupied
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-danger">
+                                            Full
+                                        </span>
+                                    }
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+                </table>
+            </div>
+        }
+
+    </div>
+
+    <!-- Assignment History -->
+    <div class="card">
+
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--line)">
+            <h3 style="margin:0">Assignment history</h3>
+            <div class="muted">
+                Current and previous resident room assignments.
+            </div>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div style="padding:1.5rem">
+                <span class="muted">
+                    No room assignments have been recorded yet.
+                </span>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrap">
+
+                <table class="data">
+
+                    <thead>
+                        <tr>
+                            <th>Resident</th>
+                            <th>Building</th>
+                            <th>Room</th>
+                            <th>Type</th>
+                            <th>Occupancy</th>
+                            <th>Move in</th>
+                            <th>Move out</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var a in Model)
+                        {
+                            var capacity = a.Room.RoomType.Capacity;
+
+                            var occupants = Model.Count(x =>
+                                x.RoomId == a.RoomId &&
+                                x.MoveOutDate == null);
+
+                            var isActive = a.MoveOutDate == null;
+
+                            <tr>
+
+                                <td>
+                                    <strong>
+                                        @a.User.Person.FullName
+                                    </strong>
+                                    <div class="muted">
+                                        @a.User.Email
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @a.Room.Property.BuildingName
+                                </td>
+
+                                <td>
+                                    @a.Room.RoomNumber
+                                </td>
+
+                                <td>
+                                    @a.Room.RoomType.RoomTypeName
+                                </td>
+
+                                <td>
+                                    @occupants / @capacity
+                                </td>
+
+                                <td>
+                                    @a.MoveInDate.ToString("dd MMM yyyy")
+                                </td>
+
+                                <td>
+                                    @(a.MoveOutDate?.ToString("dd MMM yyyy") ?? "Current")
+                                </td>
+
+                                <td>
+                                    @if (isActive)
+                                    {
+                                        <span class="status-badge status-success">
+                                            Active
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge">
+                                            Ended
+                                        </span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (isActive)
+                                    {
+                                        <form asp-action="EndAssignment"
+                                              asp-route-id="@a.AssignmentId"
+                                              method="post"
+                                              onsubmit="return confirm('Are you sure you want to end this room assignment?');">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <button class="btn-outline btn-sm"
+                                                    type="submit">
+                                                End
+                                            </button>
+
+                                        </form>
+                                    }
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+```

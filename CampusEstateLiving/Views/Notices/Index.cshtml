@@ -1,0 +1,46 @@
+@model List<Announcement>
+@{
+    ViewData["Title"] = "Estate notices";
+    var isAdmin = User.IsInRole(AppRoles.Administrator);
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <div>
+            <p class="kicker">Bulletin</p>
+            <h1>Estate notices</h1>
+        </div>
+        @if (isAdmin)
+        {
+            <a class="btn-gold" asp-action="Create">Post a notice</a>
+        }
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="card empty">No notices yet.</div>
+    }
+    else
+    {
+        <div class="notice-list">
+            @foreach (var n in Model)
+            {
+                <article class="card reveal notice-card @(n.IsPinned ? "is-pinned" : null)">
+                    <div class="page-head" style="margin-bottom:0.4rem">
+                        <div>
+                            @if (n.IsPinned) { <span class="badge badge-officer">Pinned</span> }
+                            <h2 style="margin:0.35rem 0 0">@n.Title</h2>
+                        </div>
+                        @if (isAdmin)
+                        {
+                            <form asp-action="Delete" asp-route-id="@n.AnnouncementId" method="post">
+                                <button class="btn-outline btn-sm" type="submit">Remove</button>
+                            </form>
+                        }
+                    </div>
+                    <p>@n.Body</p>
+                    <p class="muted" style="margin:0">@n.Audience · @SaTime.Format(n.PublishedAt) · @n.CreatedByUser.Person.FullName</p>
+                </article>
+            }
+        </div>
+    }
+</div>

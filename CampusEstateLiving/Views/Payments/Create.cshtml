@@ -1,0 +1,124 @@
+@model PaymentCreateViewModel
+@{
+    ViewData["Title"] = "Make a payment";
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="split">
+        <div class="card">
+            <p class="kicker">Estate account @Model.AccountNumber</p>
+            <h1>Make a payment</h1>
+            <p><a class="btn-outline btn-sm" asp-controller="Home" asp-action="Dashboard">← Back to dashboard</a></p>
+            <p class="muted">@Model.RoomLabel</p>
+            <form asp-action="Create" method="post" class="form-grid" data-confirm-payment data-vehicle-count="@Model.VehicleCount">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div>
+                    <label asp-for="CategoryId">Choose Service</label>
+                    <select asp-for="CategoryId" asp-items="Model.Categories" class="form-control" id="serviceSelect" required>
+                        <option value="">Choose a service</option>
+                    </select>
+                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                </div>
+                <div data-additional-options hidden>
+                    <div data-option-group="rent" hidden>
+                        <label for="rentOption">Room Type</label>
+                        <select id="rentOption" class="form-control" data-rent-option>
+                            <option value="">Choose a room type</option>
+                        </select>
+                    </div>
+                    <div data-option-group="electricity" hidden>
+                        <label for="electricityOption">Electricity Usage</label>
+                        <select id="electricityOption" class="form-control" data-electricity-option>
+                            <option value="">Choose a kWh package</option>
+                        </select>
+                    </div>
+                    <div data-option-group="parking" hidden>
+                        <p class="hint" data-parking-summary></p>
+                    </div>
+                    <p class="hint" data-fixed-service-hint hidden></p>
+                    <span asp-validation-for="TariffId" class="text-danger"></span>
+                </div>
+                <select data-tariff-catalog hidden aria-hidden="true" tabindex="-1">
+                    <option value=""></option>
+                    @foreach (var tariff in Model.Tariffs)
+                    {
+                        var roomTypeLabel = tariff.TariffName.Contains("single room", StringComparison.OrdinalIgnoreCase)
+                            ? "Single Room"
+                            : tariff.TariffName.Contains("sharing room", StringComparison.OrdinalIgnoreCase) ? "Sharing Room" : "";
+                        <option value="@tariff.TariffId" data-category-id="@tariff.CategoryId" data-category-name="@tariff.Category.CategoryName" data-amount="@tariff.Amount" data-name="@tariff.TariffName" data-room-type="@roomTypeLabel" data-unit="@tariff.Unit"></option>
+                    }
+                </select>
+                <input type="hidden" asp-for="TariffId" data-selected-tariff />
+                <input type="hidden" asp-for="Amount" data-amount-input />
+                <div class="card" style="padding:0.85rem 1rem;margin:0">
+                    <div class="stat-label">Amount Due</div>
+                    <div class="stat-value" data-amount-label>@(Model.Amount > 0 ? Model.Amount.ToString("C") : "Choose a service")</div>
+                </div>
+                <div>
+                    <label>Method</label>
+                    <div class="pay-method">
+                        <label class="choice">
+                            <input type="radio" asp-for="PaymentMethod" value="Card" data-method="card" /> Card
+                        </label>
+                        <label class="choice">
+                            <input type="radio" asp-for="PaymentMethod" value="EFT" data-method="eft" /> EFT
+                        </label>
+                    </div>
+                </div>
+                <div class="alert alert-info" data-card-box style="display:@(Model.PaymentMethod == "Card" ? "block" : "none")">
+                    <strong>Card payment</strong>
+                    @if (!Model.HasCards)
+                    {
+                        <p><a asp-controller="Profile" asp-action="AddCard" asp-route-returnUrl="@Url.Action("Create", "Payments")">Add a card</a> to continue.</p>
+                    }
+                    else
+                    {
+                        <label asp-for="SavedCardId">Pay with</label>
+                        <select asp-for="SavedCardId" class="form-control">
+                            @foreach (var card in Model.Cards)
+                            {
+                                <option value="@card.CardId">@card.Brand ···· @card.Last4 (expires @card.ExpiryMonth.ToString("00")/@card.ExpiryYear)</option>
+                            }
+                        </select>
+                        <a asp-controller="Profile" asp-action="AddCard" asp-route-returnUrl="@Url.Action("Create", "Payments")">Add another card</a>
+                    }
+                </div>
+                <div id="eftBox" style="display:@(Model.PaymentMethod == "EFT" ? "block" : "none")">
+                    <div class="alert alert-info">
+                        <strong>Estate EFT details</strong><br />
+                        First National Bank · UFS QwaQwa Estate<br />
+                        Account 62841029331 · Branch 250655<br />
+                        Use your estate account number as the reference.
+                    </div>
+                </div>
+                <div>
+                    <label asp-for="Notes"></label>
+                    <input asp-for="Notes" class="form-control" />
+                </div>
+                <button class="btn-gold" type="submit">Submit payment</button>
+            </form>
+        </div>
+        <div class="card">
+            <h3>Payment overview</h3>
+            @{ var outstandingAmount = ViewBag.OutstandingAmount is decimal amount ? amount : 0m; }
+            <p><strong>Current balance</strong><br />@(ViewBag.OutstandingAmount is decimal ? outstandingAmount.ToString("C") : "No balance data available")</p>
+            <p><strong>Payment status</strong><br />@(ViewBag.PaymentStatus ?? "No payments yet")</p>
+            <p><strong>Last payment</strong><br />@(ViewBag.LastPayment is Payment last ? $"{last.Category.CategoryName} · {last.Amount:C} · {last.PaymentDate:dd MMM yyyy}" : "No payments yet")</p>
+            <h4>Recent transactions</h4>
+            @if (ViewBag.RecentPayments is List<Payment> recent && recent.Count > 0)
+            {
+                <ul class="plain-list">@foreach (var p in recent) { <li>@p.Category.CategoryName · @p.Amount.ToString("C") · @p.PaymentStatus.StatusName</li> }</ul>
+            }
+            else { <p class="muted">No transactions recorded.</p> }
+            <a class="btn-outline" asp-action="Index">Payment history</a>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop" data-payment-modal hidden>
+    <section class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmPaymentTitle">
+        <h2 id="confirmPaymentTitle">Confirm Payment</h2>
+        <p>You are about to pay <strong data-confirm-amount>R0.00</strong> for <strong data-confirm-service>the selected service</strong>.</p>
+        <div class="toolbar"><button class="btn-outline" type="button" data-cancel-payment>Cancel</button><button class="btn-gold" type="button" data-accept-payment>Confirm Payment</button></div>
+    </section>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

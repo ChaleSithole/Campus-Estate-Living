@@ -1,0 +1,99 @@
+@{
+    ViewData["Title"] = "Payment Methods";
+    var cards = (List<SavedCard>)ViewBag.Cards;
+    var banks = (List<BankAccount>)ViewBag.Banks;
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <div>
+            <p class="kicker">Wallet</p>
+            <h1>Payment Methods</h1>
+        </div>
+        <div class="toolbar">
+            <a class="btn-gold" asp-action="AddCard">Add card</a>
+            <a class="btn-outline" asp-action="AddBank">Add bank account</a>
+        </div>
+    </div>
+    <div class="cards-2">
+        <div class="card">
+            <h3>Cards</h3>
+            @if (!cards.Any())
+            {
+                <p class="muted">No cards on file. When you pay by card, you will be asked to add one first.</p>
+            }
+            else
+            {
+                @foreach (var c in cards)
+                {
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.7rem 0;border-bottom:1px solid var(--line)">
+                        <div>
+                            <strong>@c.Brand</strong>
+
+                            @if (c.IsDefault)
+                            {
+                                <partial name="_Status" model='"Default"' />
+                            }
+
+                            <span> · @CardHelper.Mask(c.Last4)</span>
+
+                            <div class="muted">
+                                @c.CardholderName ·
+                                @c.ExpiryMonth.ToString("00")/@c.ExpiryYear
+                            </div>
+                        </div>
+
+                        <form asp-action="RemoveCard"
+                              asp-route-id="@c.CardId"
+                              method="post"
+                              onsubmit="return confirm('Remove this saved card?');">
+                            <button class="btn-outline btn-sm" type="submit">
+                                Remove
+                            </button>
+                        </form>
+                    </div>
+                }
+            }
+        </div>
+        <div class="card">
+            <h3>Bank accounts</h3>
+            @if (!banks.Any())
+            {
+                <p class="muted">Optional. Useful if you prefer EFT from a known account.</p>
+            }
+            else
+            {
+                @foreach (var b in banks)
+                {
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.7rem 0;border-bottom:1px solid var(--line)">
+                        <div>
+                            <strong>@b.BankName</strong>
+
+                            @if (b.IsDefault)
+                            {
+                                <partial name="_Status" model='"Default"' />
+                            }
+
+                            <span> · •••• @b.AccountNumberLast4</span>
+
+                            <div class="muted">
+                                @b.AccountHolder ·
+                                @b.AccountType ·
+                                branch @b.BranchCode
+                            </div>
+                        </div>
+
+                        <form asp-action="RemoveBank"
+                              asp-route-id="@b.BankAccountId"
+                              method="post"
+                              onsubmit="return confirm('Remove this saved bank account?');">
+                            <button class="btn-outline btn-sm" type="submit">
+                                Remove
+                            </button>
+                        </form>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

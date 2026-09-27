@@ -1,0 +1,42 @@
+@model List<Payment>
+@{
+    ViewData["Title"] = "Payments";
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <h1>Payments</h1>
+        <div class="toolbar">
+            <form method="get" class="toolbar">
+                <input class="form-control" type="search" name="q" value="@ViewBag.Q" placeholder="Name, account or reference" style="min-width:220px" />
+                <input type="hidden" name="status" value="@ViewBag.Status" />
+                <button class="btn-outline btn-sm" type="submit">Search</button>
+            </form>
+            <a class="btn-gold" asp-action="Record">Record payment</a>
+            <a class="btn-outline btn-sm" asp-action="Payments">All</a>
+            <a class="btn-outline btn-sm" asp-action="Payments" asp-route-status="Pending">Pending</a>
+            <a class="btn-outline btn-sm" asp-action="Payments" asp-route-status="Confirmed">Confirmed</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="table-wrap">
+            <table class="data">
+                <thead><tr><th>Date</th><th>Resident</th><th>Service</th><th>Amount</th><th>Method</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td>@SaTime.FormatDate(p.PaymentDate)</td>
+                        <td>@p.Account.User.Person.FullName</td>
+                        <td>@p.Category.CategoryName</td>
+                        <td>@p.Amount.ToString("C")</td>
+                        <td>@p.PaymentMethod</td>
+                        <td><partial name="_Status" model="p.PaymentStatus.StatusName" /></td>
+                        <td><a asp-action="PaymentDetails" asp-route-id="@p.PaymentId">Open</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

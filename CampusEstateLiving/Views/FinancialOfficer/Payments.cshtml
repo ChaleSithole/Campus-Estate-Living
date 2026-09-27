@@ -1,0 +1,199 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+```cshtml
+@model List<Payment>
+
+@{
+    ViewData["Title"] = "Payment Management";
+    var selectedStatus = ViewBag.Status as string;
+}
+
+<div class="page">
+
+    <partial name="_Alerts" />
+
+    <div class="page-head">
+        <div>
+            <h1>Payment management</h1>
+            <p class="muted">
+                Review and process resident estate payments.
+            </p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card" style="margin-bottom:1rem">
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+
+            <a class="btn-outline btn-sm"
+               asp-action="Payments">
+                All
+            </a>
+
+            <a class="btn-outline btn-sm"
+               asp-action="Payments"
+               asp-route-status="@PaymentStatusNames.Pending">
+                Pending
+            </a>
+
+            <a class="btn-outline btn-sm"
+               asp-action="Payments"
+               asp-route-status="@PaymentStatusNames.Confirmed">
+                Confirmed
+            </a>
+
+            <a class="btn-outline btn-sm"
+               asp-action="Payments"
+               asp-route-status="@PaymentStatusNames.Failed">
+                Failed
+            </a>
+
+            <a class="btn-outline btn-sm"
+               asp-action="Payments"
+               asp-route-status="@PaymentStatusNames.Cancelled">
+                Cancelled
+            </a>
+
+        </div>
+    </div>
+
+    <!-- Payments -->
+    <div class="card">
+
+        <div class="table-wrap">
+
+            @if (!Model.Any())
+            {
+                <div style="padding:2rem;text-align:center">
+                    <h3>No payments found</h3>
+                    <p class="muted">
+                        There are no payments matching the selected filter.
+                    </p>
+                </div>
+            }
+            else
+            {
+                <table class="data">
+
+                    <thead>
+                        <tr>
+                            <th>Resident</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Reference</th>
+                            <th>Payment date</th>
+                            <th>Status</th>
+                            <th>Processed by</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var payment in Model)
+                        {
+                            <tr>
+
+                                <td>
+                                    <strong>
+                                        @payment.Account.User.Person.FullName
+                                    </strong>
+
+                                    <div class="muted">
+                                        @payment.Account.AccountNumber
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @payment.Category.CategoryName
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        @payment.Amount.ToString("C")
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    @payment.ReferenceNumber
+                                </td>
+
+                                <td>
+                                    @SaTime.Format(payment.PaymentDate)
+                                </td>
+
+                                <td>
+
+                                    @if (payment.PaymentStatus.StatusName ==
+                                        PaymentStatusNames.Pending)
+                                    {
+                                        <span class="status-badge status-warning">
+                                            Pending
+                                        </span>
+                                    }
+                                    else if (payment.PaymentStatus.StatusName ==
+                                             PaymentStatusNames.Confirmed)
+                                    {
+                                        <span class="status-badge status-success">
+                                            Confirmed
+                                        </span>
+                                    }
+                                    else if (payment.PaymentStatus.StatusName ==
+                                             PaymentStatusNames.Failed)
+                                    {
+                                        <span class="status-badge status-danger">
+                                            Failed
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge">
+                                            @payment.PaymentStatus.StatusName
+                                        </span>
+                                    }
+
+                                </td>
+
+                                <td>
+                                    @if (payment.ProcessedByUser?.Person != null)
+                                    {
+                                        @payment.ProcessedByUser.Person.FullName
+
+                                        @if (payment.ProcessedAt.HasValue)
+                                        {
+                                            <div class="muted">
+                                                @SaTime.Format(payment.ProcessedAt.Value)
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="muted">Not processed</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <a class="btn-outline btn-sm"
+                                       asp-action="Details"
+                                       asp-route-id="@payment.PaymentId">
+                                        View
+                                    </a>
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+            }
+
+        </div>
+
+    </div>
+
+</div>
+```

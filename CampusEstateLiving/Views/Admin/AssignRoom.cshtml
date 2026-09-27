@@ -1,0 +1,27 @@
+@model AssignRoomViewModel
+@{
+    ViewData["Title"] = "Assign room";
+}
+<div class="page">
+    <div class="card form-card">
+        <h1>Assign a room</h1>
+        <p><a class="btn-outline btn-sm" asp-action="Assignments">← Back to assignments</a></p>
+        <p class="muted">Single rooms take one occupant. Sharing rooms take two. A resident may have only one current assignment.</p>
+        <form asp-action="AssignRoom" method="post" class="form-grid">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div>
+                <label asp-for="UserId"></label>
+                <select asp-for="UserId" class="form-control" asp-items="ViewBag.Users"></select>
+            </div>
+            <div>
+                <label asp-for="RoomId"></label>
+                <select asp-for="RoomId" class="form-control" asp-items="ViewBag.Rooms"></select>
+            </div>
+            <div>
+                <label asp-for="MoveInDate"></label>
+                <input asp-for="MoveInDate" class="form-control" type="date" />
+            </div>
+            <button class="btn-primary" type="submit">Assign</button>
+        </form>
+    </div>
+</div>

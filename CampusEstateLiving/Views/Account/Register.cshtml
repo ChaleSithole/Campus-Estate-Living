@@ -1,0 +1,72 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+<div class="auth-wrap">
+    <div class="auth-card" style="width:min(520px,100%)">
+        <h1>Resident registration</h1>
+        <p class="sub">Students and staff only. Administrators and financial officers are created by the agent head.</p>
+        @if (ViewBag.AccountCreated == true) { <div class="alert alert-success">Account Created Successfully. Welcome to Campus Estate Living.</div> }
+        <form asp-action="Register" method="post" class="form-grid" data-confirm-create>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-grid two">
+                <div>
+                    <label asp-for="FirstName"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName"></span>
+                </div>
+                <div>
+                    <label asp-for="LastName"></label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName"></span>
+                </div>
+            </div>
+            <div>
+                <label asp-for="AccountType"></label>
+                <select asp-for="AccountType" class="form-control" data-account-type>
+                    <option value="Student">Student</option>
+                    <option value="Staff">Staff member</option>
+                </select>
+            </div>
+            <div>
+                <label asp-for="UserNumber" data-register-number-label></label>
+                <input asp-for="UserNumber" class="form-control" data-register-number inputmode="numeric" />
+                <span asp-validation-for="UserNumber"></span>
+            </div>
+            <div class="form-grid two">
+                <div><label asp-for="DateOfBirth"></label><input asp-for="DateOfBirth" class="form-control" type="date" /></div>
+                <div><label asp-for="Gender"></label><select asp-for="Gender" class="form-control"><option value="">Select</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+            </div>
+            <label style="font-weight:500"><input asp-for="HasDisability" /> Disability support requested</label>
+            <div><label asp-for="DisabilityDetails"></label><textarea asp-for="DisabilityDetails" class="form-control" rows="2"></textarea></div>
+            <div>
+                <label asp-for="PhoneNumber"></label>
+                <input asp-for="PhoneNumber" class="form-control" />
+            </div>
+            <div>
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="form-control" autocomplete="username" />
+                <span asp-validation-for="Email"></span>
+            </div>
+            <div class="form-grid two">
+                <div>
+                    <label asp-for="Password"></label>
+                    <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                    <p class="hint">At least 8 characters, with upper and lower case, a number and a symbol.</p>
+                    <span asp-validation-for="Password"></span>
+                </div>
+                <div>
+                    <label asp-for="ConfirmPassword"></label>
+                    <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="ConfirmPassword"></span>
+                </div>
+            </div>
+            <button class="btn-primary" type="submit">Create account</button>
+        </form>
+        <p class="muted" style="margin-top:1rem;text-align:center">
+            Already registered? <a asp-action="Login">Sign in</a>
+        </p>
+    </div>
+</div>
+<div class="modal-backdrop" data-create-modal hidden><section class="confirm-modal" role="dialog" aria-modal="true"><h2>Create Account?</h2><p>Please confirm that the information entered is correct.</p><div class="toolbar"><button type="button" class="btn-outline" data-cancel-create>Cancel</button><button type="button" class="btn-primary" data-accept-create>Create Account</button></div></section></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,26 @@
+@model List<Property>
+@{
+    ViewData["Title"] = "Properties";
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <h1>Properties</h1>
+        <div class="toolbar">
+            <a class="btn-gold" asp-action="CreateProperty">Add building</a>
+            <a class="btn-outline" asp-action="Rooms">Rooms</a>
+            <a class="btn-outline" asp-action="Assignments">Assignments</a>
+        </div>
+    </div>
+    <div class="cards-2">
+        @foreach (var p in Model)
+        {
+            <div class="card">
+                <p class="kicker">@p.BuildingCode</p>
+                <h3>@p.BuildingName</h3>
+                <p class="muted">@p.Address</p>
+                <p>@p.Rooms.Count rooms · <partial name="_Status" model="p.PropertyStatus" /></p>
+            </div>
+        }
+    </div>
+</div>
