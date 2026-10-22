@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        style="@style/TextEyebrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Estate account" />
+
+    <TextView
+        style="@style/TextTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Your payments" />
+
+    <!-- EFT policy -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/gap_card"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:padding="@dimen/pad_card">
+
+        <TextView
+            style="@style/TextCardTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:text="Payment verification" />
+
+        <TextView
+            style="@style/TextBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="0dp"
+            android:paddingTop="2dp"
+            android:text="Card and EFT payments stay pending until reviewed and confirmed by a campus financial officer. No funds are transferred before confirmation." />
+    </LinearLayout>
+
+    <!-- Status filters, filled from code -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:fillViewport="false"
+        android:clipToPadding="false"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/filterRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <Button
+        android:id="@+id/payButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/gap_card"
+        android:background="@drawable/bg_btn_primary"
+        android:minHeight="@dimen/button_min_height"
+        android:stateListAnimator="@null"
+        android:elevation="0dp"
+        android:textAllCaps="false"
+        android:textColor="@color/on_primary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:text="Make payment" />
+
+    <!-- Payment rows, filled from code using item_payment.xml -->
+    <LinearLayout
+        android:id="@+id/paymentList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <LinearLayout
+        android:id="@+id/emptyCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:padding="@dimen/pad_card"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/emptyText"
+            style="@style/TextBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="0dp"
+            android:text="No payment records found for this filter." />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/totalCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:padding="@dimen/pad_card"
+        android:visibility="gone">
+
+        <TextView
+            style="@style/TextLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Total pending verification" />
+
+        <TextView
+            android:id="@+id/totalValue"
+            style="@style/TextFigure"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+</LinearLayout>

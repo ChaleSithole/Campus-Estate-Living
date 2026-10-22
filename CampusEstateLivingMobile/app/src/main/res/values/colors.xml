@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <color name="navy_deep">#051321</color>
+    <color name="navy">#0A1E34</color>
+    <color name="navy_mid">#0E2339</color>
+    <color name="navy_soft">#173B5E</color>
+    <color name="gold">#D4AF37</color>
+    <color name="gold_light">#F3E5AB</color>
+    <color name="gold_dim">#B89344</color>
+    <color name="gold_chip_start">#E8CA7C</color>
+    <color name="cream">#F8FAFC</color>
+    <color name="muted">#64748B</color>
+    <color name="ok">#10B981</color>
+    <color name="warn">#F59E0B</color>
+    <color name="danger">#EF4444</color>
+
+    <!-- Surfaces and text (light). values-night overrides these. -->
+    <color name="card_bg">#FFFFFF</color>
+    <color name="input_bg">#FFFFFF</color>
+    <color name="line">#E2E8F0</color>
+    <color name="hero_stroke">#66D4AF37</color>
+    <color name="text_heading">#0A1E34</color>
+    <color name="text_body">#0A1828</color>
+    <color name="text_muted">#64748B</color>
+    <color name="text_gold">#B89344</color>
+    <color name="text_hero">#F8FAFC</color>
+    <color name="text_hero_sub">#C9D4DF</color>
+    <color name="btn_primary">#0A1E34</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="text_on_gold">#051321</color>
+    <color name="ripple_gold">#66F3E5AB</color>
+    <color name="ripple_gold_soft">#33D4AF37</color>
+</resources>

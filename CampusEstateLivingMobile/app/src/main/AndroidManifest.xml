@@ -1,0 +1,48 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="Campus Estate Living"
+        android:theme="@style/AppTheme"
+        android:name=".CelApp"
+        android:networkSecurityConfig="@xml/network_security_config">
+
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:noHistory="true"
+            android:theme="@style/SplashTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".LoginActivity" android:exported="false" />
+        <activity android:name=".MaintenanceActivity" android:exported="false" />
+        <activity android:name=".NoticesActivity" android:exported="false" />
+        <activity android:name=".VehiclesActivity" android:exported="false" />
+        <activity android:name=".AssignRoomActivity" android:exported="false" />
+        <activity android:name=".UserDetailActivity" android:exported="false" />
+        <activity android:name=".UsersActivity" android:exported="false" />
+        <activity android:name=".StaffMessagesActivity" android:exported="false" />
+        <activity android:name=".RecordPaymentActivity" android:exported="false" />
+        <activity android:name=".FinanceActivity" android:exported="false" />
+        <activity android:name=".ReviewsActivity" android:exported="false" />
+        <activity android:name=".WalletActivity" android:exported="false" />
+        <activity android:name=".PaymentDetailActivity" android:exported="false" />
+        <activity android:name=".PaymentsActivity" android:exported="false" />
+        <activity android:name=".NotificationsActivity" android:exported="false" />
+        <activity android:name=".MoreActivity" android:exported="false" />
+        <activity android:name=".RegisterActivity" android:exported="false" />
+        <activity android:name=".ProfileActivity" android:exported="false" />
+        <activity android:name=".AccommodationActivity" android:exported="false" />
+        <activity android:name=".HistoryActivity" android:exported="false" />
+        <activity android:name=".ChargesActivity" android:exported="false" />
+        <activity android:name=".ReportsActivity" android:exported="false" />
+        <activity android:name=".BuildingsActivity" android:exported="false" />
+        <activity android:name=".AssignmentsActivity" android:exported="false" />
+        <activity android:name=".MainActivity" android:exported="false" />
+    </application>
+</manifest>

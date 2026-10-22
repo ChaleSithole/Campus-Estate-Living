@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:colorAccent">@color/gold</item>
+        <item name="android:windowBackground">#F4F6F9</item>
+        <item name="android:statusBarColor">@color/cream</item>
+        <item name="android:navigationBarColor">@color/card_bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="SplashTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#071426</item>
+        <item name="android:statusBarColor">#071426</item>
+        <item name="android:navigationBarColor">#071426</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowFullscreen">false</item>
+    </style>
+
+    <!-- Type scale shared by every XML screen. Mirrors Ui.java. -->
+    <style name="TextEyebrow">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/text_gold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.16</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextTitle">
+        <item name="android:textSize">28sp</item>
+        <item name="android:textColor">@color/text_heading</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <style name="TextBody">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/text_muted</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+
+    <style name="TextCardTitle">
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/text_heading</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextLabel">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/text_muted</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+    </style>
+
+    <style name="TextValue">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_body</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextFigure">
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">@color/text_heading</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:paddingTop">4dp</item>
+    </style>
+
+    <style name="TextHero">
+        <item name="android:textSize">30sp</item>
+        <item name="android:textColor">@color/text_hero</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingTop">8dp</item>
+    </style>
+
+    <style name="TextHeroSub">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_hero_sub</item>
+        <item name="android:paddingTop">6dp</item>
+    </style>
+
+    <style name="TextCaption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_muted</item>
+        <item name="android:paddingTop">2dp</item>
+    </style>
+    <style name="Field" parent="">
+        <item name="android:background">@drawable/bg_input</item>
+        <item name="android:minHeight">@dimen/input_min_height</item>
+        <item name="android:padding">14dp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@color/text_body</item>
+        <item name="android:textColorHint">@color/text_muted</item>
+        <item name="android:layout_marginBottom">14dp</item>
+    </style>
+</resources>

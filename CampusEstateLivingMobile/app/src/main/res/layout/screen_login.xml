@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/loginMark"
+        android:layout_width="76dp"
+        android:layout_height="76dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="10dp"
+        android:contentDescription="@string/app_name"
+        android:scaleType="fitCenter"
+        android:src="@drawable/brand_mark" />
+
+    <TextView
+        style="@style/TextCardTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:letterSpacing="0.08"
+        android:textSize="22sp"
+        android:text="Campus Estate Living" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="4dp"
+        android:paddingBottom="22dp"
+        android:textColor="@color/text_muted"
+        android:textSize="14sp"
+        android:text="UFS Qwaqwa campus" />
+
+    <TextView
+        style="@style/TextEyebrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="2dp"
+        android:text="WELCOME BACK" />
+
+    <TextView
+        style="@style/TextTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sign in" />
+
+    <TextView
+        style="@style/TextBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="0dp"
+        android:paddingBottom="16dp"
+        android:text="Use the email and password for your estate account." />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <TextView
+            style="@style/TextLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:text="Institutional email" />
+
+        <EditText
+            android:id="@+id/emailInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_input"
+            android:hint="e.g. 2024012345@student.ufs.ac.za"
+            android:inputType="textEmailAddress"
+            android:minHeight="@dimen/input_min_height"
+            android:padding="15dp"
+            android:singleLine="true"
+            android:textColor="@color/text_body"
+            android:textColorHint="@color/text_muted" />
+
+        <TextView
+            style="@style/TextLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:text="Password" />
+
+        <EditText
+            android:id="@+id/passwordInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/bg_input"
+            android:hint="Account password"
+            android:inputType="textPassword"
+            android:minHeight="@dimen/input_min_height"
+            android:padding="15dp"
+            android:singleLine="true"
+            android:textColor="@color/text_body"
+            android:textColorHint="@color/text_muted" />
+
+        <Button
+            android:id="@+id/showPasswordButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/bg_btn_outline"
+            android:minHeight="@dimen/button_min_height"
+            android:stateListAnimator="@null"
+            android:elevation="0dp"
+            android:textAllCaps="false"
+            android:textColor="@color/text_heading"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:text="Show password" />
+
+        <TextView
+            android:id="@+id/loginError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:textColor="#C62828"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/loginButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_btn_primary"
+            android:minHeight="@dimen/button_min_height"
+            android:stateListAnimator="@null"
+            android:elevation="0dp"
+            android:textAllCaps="false"
+            android:textColor="@color/on_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:text="Sign in" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/registerButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_btn_outline"
+        android:minHeight="@dimen/button_min_height"
+        android:stateListAnimator="@null"
+        android:elevation="0dp"
+        android:textAllCaps="false"
+        android:textColor="@color/text_heading"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:text="Create a student or staff account" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="2dp"
+        android:paddingBottom="8dp"
+        android:text="Secure access to your campus estate"
+        android:textColor="@color/text_muted"
+        android:textSize="12sp" />
+</LinearLayout>
