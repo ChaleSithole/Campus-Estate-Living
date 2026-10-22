@@ -156,4 +156,52 @@ public class WalletController : ControllerBase
             IsDefault = bank.IsDefault
         });
     }
+
+    [HttpDelete("cards/{id:int}")]
+    public async Task<IActionResult> RemoveCard(int id)
+    {
+        var userId = User.GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var card = await _db.SavedCards.FirstOrDefaultAsync(c => c.CardId == id && c.UserId == userId.Value);
+        if (card == null) return NotFound(new { message = "Card not found." });
+
+        var wasDefault = card.IsDefault;
+        _db.SavedCards.Remove(card);
+        if (wasDefault)
+        {
+            var replacement = await _db.SavedCards
+                .Where(c => c.UserId == userId.Value && c.CardId != id)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefaultAsync();
+            if (replacement != null) replacement.IsDefault = true;
+        }
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Card removed." });
+    }
+
+    [HttpDelete("banks/{id:int}")]
+    public async Task<IActionResult> RemoveBank(int id)
+    {
+        var userId = User.GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var bank = await _db.BankAccounts.FirstOrDefaultAsync(b => b.BankAccountId == id && b.UserId == userId.Value);
+        if (bank == null) return NotFound(new { message = "Bank account not found." });
+
+        var wasDefault = bank.IsDefault;
+        _db.BankAccounts.Remove(bank);
+        if (wasDefault)
+        {
+            var replacement = await _db.BankAccounts
+                .Where(b => b.UserId == userId.Value && b.BankAccountId != id)
+                .OrderByDescending(b => b.CreatedAt)
+                .FirstOrDefaultAsync();
+            if (replacement != null) replacement.IsDefault = true;
+        }
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Bank account removed." });
+    }
 }

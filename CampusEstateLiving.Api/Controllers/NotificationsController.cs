@@ -72,4 +72,18 @@ public class NotificationsController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(new { message = "Notification marked as read." });
     }
+
+    [HttpPost("read-all")]
+    public async Task<IActionResult> MarkAllRead()
+    {
+        var userId = User.GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var unread = await _db.Notifications
+            .Where(n => n.UserId == userId.Value && !n.IsRead)
+            .ToListAsync();
+        foreach (var item in unread) item.IsRead = true;
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Notifications marked as read.", count = unread.Count });
+    }
 }

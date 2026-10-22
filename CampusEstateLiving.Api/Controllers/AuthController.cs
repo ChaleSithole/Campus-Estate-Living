@@ -69,16 +69,7 @@ public class AuthController : ControllerBase
         var roles = (await _users.GetRolesAsync(user)).ToList();
         var (token, expiresAt) = _jwt.CreateToken(user, roles);
 
-        return Ok(new LoginResponse
-        {
-            Token = token,
-            ExpiresAt = expiresAt,
-            UserId = user.Id,
-            UserNumber = user.UserNumber,
-            Email = user.Email ?? string.Empty,
-            FullName = user.Person.FullName,
-            Roles = roles
-        });
+        return Ok(await BuildLoginAsync(user, roles, token, expiresAt));
     }
 
     [HttpPost("register")]
@@ -162,16 +153,7 @@ public class AuthController : ControllerBase
             var roles = (await _users.GetRolesAsync(user)).ToList();
             var (token, expiresAt) = _jwt.CreateToken(user, roles);
 
-            return Ok(new LoginResponse
-            {
-                Token = token,
-                ExpiresAt = expiresAt,
-                UserId = user.Id,
-                UserNumber = user.UserNumber,
-                Email = user.Email ?? string.Empty,
-                FullName = person.FullName,
-                Roles = roles
-            });
+            return Ok(await BuildLoginAsync(user, roles, token, expiresAt));
         }
         catch
         {
@@ -194,14 +176,33 @@ public class AuthController : ControllerBase
         if (user == null) return Unauthorized();
 
         var roles = (await _users.GetRolesAsync(user)).ToList();
-        return Ok(new LoginResponse
+        return Ok(await BuildLoginAsync(user, roles, null, null));
+    }
+
+    private async Task<LoginResponse> BuildLoginAsync(
+        ApplicationUser user,
+        IList<string> roles,
+        string? token,
+        DateTime? expiresAt)
+    {
+        var identityRoleIds = await _db.Set<ApplicationUserRole>()
+            .Where(ur => ur.UserId == user.Id)
+            .Select(ur => ur.RoleId)
+            .ToListAsync();
+
+        return new LoginResponse
         {
+            Token = token ?? string.Empty,
+            ExpiresAt = expiresAt ?? default,
             UserId = user.Id,
             UserNumber = user.UserNumber,
             Email = user.Email ?? string.Empty,
             FullName = user.Person.FullName,
-            Roles = roles
-        });
+            Roles = roles.ToList(),
+            IdentityRoleIds = identityRoleIds,
+            PrimaryRoleId = UiCategory.PrimaryRoleId(roles),
+            UiCategory = UiCategory.ForRoles(roles)
+        };
     }
 
     [Authorize]

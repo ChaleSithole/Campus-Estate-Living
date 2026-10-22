@@ -1,0 +1,229 @@
+@model PayAllViewModel
+@{
+    ViewData["Title"] = "Pay all services";
+}
+<div class="page pay-all-page">
+    <partial name="_Alerts" />
+
+    <div class="pay-all-shell">
+        <header class="pay-all-header">
+            <div>
+                <p class="kicker">Estate account @Model.AccountNumber</p>
+                <h1>Pay all services</h1>
+                <p class="muted pay-all-room">
+                    @(string.IsNullOrWhiteSpace(Model.RoomLabel) ? "No room assigned yet" : Model.RoomLabel)
+                </p>
+            </div>
+            <div class="pay-all-total-card" aria-live="polite">
+                <div class="stat-label">Selected total</div>
+                <div class="stat-value" data-pay-all-total>@Model.Total.ToString("C")</div>
+            </div>
+        </header>
+
+        <form asp-action="All" method="post" class="pay-all-form" data-pay-all-form>
+            <div asp-validation-summary="ModelOnly" class="text-danger pay-all-errors"></div>
+
+            <section class="pay-all-section" aria-labelledby="pay-all-services-title">
+                <div class="pay-all-section-head">
+                    <h2 id="pay-all-services-title">Services</h2>
+                    <p class="muted">Select what to pay. Parking only appears if you qualify and stays optional.</p>
+                </div>
+
+                <div class="pay-all-list">
+                    @for (var i = 0; i < Model.Services.Count; i++)
+                    {
+                        var svc = Model.Services[i];
+                        var rowClass = svc.IsSelected ? "pay-all-row is-selected" : "pay-all-row";
+                        if (svc.AllowsTariffChoice) { rowClass += " has-tariff"; }
+                        <div class="@rowClass" data-pay-all-row>
+                            <label class="pay-all-check">
+                                <input asp-for="Services[i].IsSelected"
+                                       data-pay-all-item
+                                       data-amount="@svc.Amount.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                                <input asp-for="Services[i].CategoryId" type="hidden" />
+                                @if (!svc.AllowsTariffChoice)
+                                {
+                                    <input asp-for="Services[i].TariffId" type="hidden" />
+                                }
+                                <span class="pay-all-check-ui" aria-hidden="true"></span>
+                            </label>
+
+                            <div class="pay-all-body">
+                                <div class="pay-all-title-row">
+                                    <strong class="pay-all-name">@svc.CategoryName</strong>
+                                    @if (!svc.AllowsTariffChoice)
+                                    {
+                                        <small class="pay-all-meta">@svc.TariffName</small>
+                                    }
+                                </div>
+
+                                @if (svc.AllowsTariffChoice && svc.TariffOptions.Count > 0)
+                                {
+                                    <div class="pay-all-tariff">
+                                        <label class="pay-all-tariff-label" for="Services_@(i)__TariffId">Electricity bundle</label>
+                                        <select asp-for="Services[i].TariffId"
+                                                class="form-control pay-all-tariff-select"
+                                                data-pay-all-tariff
+                                                data-amount-target="pay-all-amount-@i">
+                                            @foreach (var opt in svc.TariffOptions)
+                                            {
+                                                if (opt.TariffId == svc.TariffId)
+                                                {
+                                                    <option value="@opt.TariffId"
+                                                            data-amount="@opt.Amount.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                            selected="selected">
+                                                        @opt.TariffName — @opt.Amount.ToString("C") (@opt.Unit)
+                                                    </option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@opt.TariffId"
+                                                            data-amount="@opt.Amount.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                                        @opt.TariffName — @opt.Amount.ToString("C") (@opt.Unit)
+                                                    </option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="pay-all-amount-wrap">
+                                <span class="pay-all-amount-label">Amount</span>
+                                <b class="pay-all-amount" data-pay-all-amount id="pay-all-amount-@i">@svc.Amount.ToString("C")</b>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="pay-all-section" aria-labelledby="pay-all-method-title">
+                <div class="pay-all-section-head">
+                    <h2 id="pay-all-method-title">Payment method</h2>
+                </div>
+
+                <div class="pay-method">
+                    <label class="choice">
+                        <input type="radio" asp-for="PaymentMethod" value="Card" data-method="card" />
+                        <span class="choice-copy">
+                            <strong>Card</strong>
+                            <small>Instant confirmation (demo)</small>
+                        </span>
+                    </label>
+                    <label class="choice">
+                        <input type="radio" asp-for="PaymentMethod" value="EFT" data-method="eft" />
+                        <span class="choice-copy">
+                            <strong>EFT</strong>
+                            <small>Pending officer verification</small>
+                        </span>
+                    </label>
+                </div>
+                <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+
+                <div class="pay-all-method-panel alert alert-info" data-card-box style="display:@(Model.PaymentMethod == "Card" ? "block" : "none")">
+                    <strong>Card payment</strong>
+                    @if (!Model.HasCards)
+                    {
+                        <p class="muted" style="margin:0.4rem 0 0">
+                            <a asp-controller="Profile" asp-action="AddCard" asp-route-returnUrl="@Url.Action("All", "Payments")">Add a card</a> to continue.
+                        </p>
+                    }
+                    else
+                    {
+                        <label asp-for="SavedCardId" class="pay-all-tariff-label">Pay with</label>
+                        <select asp-for="SavedCardId" class="form-control">
+                            @foreach (var card in Model.Cards)
+                            {
+                                <option value="@card.CardId">@card.Brand ···· @card.Last4 (expires @card.ExpiryMonth.ToString("00")/@card.ExpiryYear)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="SavedCardId" class="text-danger"></span>
+                    }
+                </div>
+
+                <div class="pay-all-method-panel alert alert-info" id="eftBox" style="display:@(Model.PaymentMethod == "EFT" ? "block" : "none")">
+                    <strong>Estate EFT details</strong>
+                    <p class="muted" style="margin:0.4rem 0 0">
+                        First National Bank — UFS QwaQwa Estate<br />
+                        Account <strong>62841029331</strong> · Branch <strong>250655</strong><br />
+                        Use your estate account number as the reference.
+                    </p>
+                </div>
+            </section>
+
+            <div class="pay-all-footer toolbar">
+                <button class="btn-gold" type="submit">Pay selected services</button>
+                <a class="btn-outline" asp-action="Index">Back to payments</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const form = document.querySelector("[data-pay-all-form]");
+            if (!form) return;
+
+            const currency = (n) => {
+                try {
+                    return new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(n);
+                } catch {
+                    return "R " + n.toFixed(2);
+                }
+            };
+
+            const syncRowSelected = (row, checked) => {
+                if (!row) return;
+                row.classList.toggle("is-selected", !!checked);
+            };
+
+            const recalc = () => {
+                let total = 0;
+                form.querySelectorAll("[data-pay-all-item]").forEach((cb) => {
+                    const row = cb.closest("[data-pay-all-row]");
+                    syncRowSelected(row, cb.checked);
+                    if (!cb.checked) return;
+                    const amount = parseFloat(cb.getAttribute("data-amount") || "0");
+                    if (!Number.isNaN(amount)) total += amount;
+                });
+                document.querySelectorAll("[data-pay-all-total]").forEach((el) => {
+                    el.textContent = currency(total);
+                });
+            };
+
+            form.querySelectorAll("[data-pay-all-tariff]").forEach((select) => {
+                select.addEventListener("change", () => {
+                    const opt = select.selectedOptions[0];
+                    if (!opt) return;
+                    const amount = parseFloat(opt.getAttribute("data-amount") || "0");
+                    const targetId = select.getAttribute("data-amount-target");
+                    const amountEl = targetId ? document.getElementById(targetId) : null;
+                    if (amountEl) amountEl.textContent = currency(amount);
+
+                    const row = select.closest("[data-pay-all-row]");
+                    const cb = row?.querySelector("[data-pay-all-item]");
+                    if (cb) cb.setAttribute("data-amount", String(amount));
+                    recalc();
+                });
+            });
+
+            form.querySelectorAll("[data-pay-all-item]").forEach((cb) => {
+                cb.addEventListener("change", recalc);
+            });
+
+            const cardBox = form.querySelector("[data-card-box]");
+            const eftBox = form.querySelector("#eftBox");
+            form.querySelectorAll("[data-method]").forEach((radio) => {
+                radio.addEventListener("change", () => {
+                    const method = radio.value;
+                    if (cardBox) cardBox.style.display = method === "Card" ? "block" : "none";
+                    if (eftBox) eftBox.style.display = method === "EFT" ? "block" : "none";
+                });
+            });
+
+            recalc();
+        })();
+    </script>
+}

@@ -52,8 +52,9 @@
                     <a class="@(Nav("Home","Dashboard") ? "active" : null)" asp-controller="Home" asp-action="Dashboard">Dashboard</a>
                     @if (User.IsInRole(AppRoles.Administrator))
                     {
+                        <a class="@(Nav("Messages") ? "active" : null)" asp-controller="Messages" asp-action="Index">Messages</a>
                         <a class="@(Nav("Admin","Users") || Nav("Admin","Students") || Nav("Admin","Staff") ? "active" : null)" asp-controller="Admin" asp-action="Users">Users</a>
-                        <a class="@(Nav("Admin","Management") || Nav("Admin","Officers") ? "active" : null)" asp-controller="Admin" asp-action="Management">Management</a>
+                        <a class="@(Nav("Admin","Management") || Nav("Admin","Officers") || Nav("Admin","Tariffs") || Nav("Admin","Services") ? "active" : null)" asp-controller="Admin" asp-action="Management">Management</a>
                         <a class="@(Nav("Admin","Rooms") || Nav("Admin","Properties") || Nav("Admin","Assignments") ? "active" : null)" asp-controller="Admin" asp-action="Rooms">Estate</a>
                         <a class="@(Nav("Admin","Payments") ? "active" : null)" asp-controller="Admin" asp-action="Payments">Payments</a>
                         <a class="@(Nav("Notices") ? "active" : null)" asp-controller="Notices" asp-action="Index">Notices</a>
@@ -62,6 +63,7 @@
                     }
                     else if (User.IsInRole(AppRoles.FinancialOfficer))
                     {
+                        <a class="@(Nav("Messages") ? "active" : null)" asp-controller="Messages" asp-action="Index">Messages</a>
                         <a class="@(Nav("Financial","Users") ? "active" : null)" asp-controller="Financial" asp-action="Users">Residents</a>
                         <a class="@(Nav("Financial","Payments") ? "active" : null)" asp-controller="Financial" asp-action="Payments">Payments</a>
                         <a class="@(Nav("Financial","Record") ? "active" : null)" asp-controller="Financial" asp-action="Record">Record</a>
@@ -71,8 +73,8 @@
                     else
                     {
                         <a class="@(Nav("Accommodation") ? "active" : null)" asp-controller="Accommodation" asp-action="Index">Accommodation</a>
-                        <a class="@(Nav("Payments","Create") ? "active" : null)" asp-controller="Payments" asp-action="Create">Pay</a>
-                        <a class="@(Nav("Payments","Index") || Nav("Payments","Statement") ? "active" : null)" asp-controller="Payments" asp-action="Index">History</a>
+                        <a class="@(Nav("Payments","Index") || Nav("Payments","Create") ? "active" : null)" asp-controller="Payments" asp-action="Index">Pay</a>
+                        <a class="@(Nav("Payments","Statement") ? "active" : null)" asp-controller="Payments" asp-action="Statement">Statement</a>
                         <a class="@(Nav("Maintenance") ? "active" : null)" asp-controller="Maintenance" asp-action="Index">Maintenance</a>
                         <a class="@(Nav("Notices") ? "active" : null)" asp-controller="Notices" asp-action="Index">Notices</a>
                     }

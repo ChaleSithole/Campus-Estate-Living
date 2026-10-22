@@ -38,6 +38,59 @@ public class PaymentCreateViewModel
     public string? RoomLabel { get; set; }
 }
 
+public class PayableServiceViewModel
+{
+    public int CategoryId { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public decimal StartingAmount { get; set; }
+    public string Unit { get; set; } = string.Empty;
+    public int OptionCount { get; set; }
+    public bool IsAvailable { get; set; } = true;
+    public string? AvailabilityMessage { get; set; }
+}
+
+public class PayAllTariffOption
+{
+    public int TariffId { get; set; }
+    public string TariffName { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public string Unit { get; set; } = string.Empty;
+    public string Label => $"{TariffName} — {Amount:C} ({Unit})";
+}
+
+public class PayAllServiceViewModel
+{
+    public int CategoryId { get; set; }
+    public int TariffId { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public string TariffName { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public decimal Amount { get; set; }
+    public bool IsSelected { get; set; } = true;
+
+    public bool AllowsTariffChoice { get; set; }
+    public List<PayAllTariffOption> TariffOptions { get; set; } = [];
+}
+
+public class PayAllViewModel
+{
+    public string? AccountNumber { get; set; }
+    public string? RoomLabel { get; set; }
+
+    [Required]
+    [Display(Name = "Payment method")]
+    public string PaymentMethod { get; set; } = PaymentMethods.Card;
+
+    [Display(Name = "Saved card")]
+    public int? SavedCardId { get; set; }
+
+    public List<SavedCard> Cards { get; set; } = [];
+    public bool HasCards { get; set; }
+    public List<PayAllServiceViewModel> Services { get; set; } = [];
+    public decimal Total => Services.Where(s => s.IsSelected).Sum(s => s.Amount);
+}
+
 public class ReviewCreateViewModel
 {
     [Range(1, 5)]

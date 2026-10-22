@@ -13,6 +13,7 @@ public class UserSummaryDto
     public bool IsActive { get; set; }
     public List<string> Roles { get; set; } = [];
     public string? AccountNumber { get; set; }
+    public int? AccountId { get; set; }
     public string? AccountStatus { get; set; }
 }
 

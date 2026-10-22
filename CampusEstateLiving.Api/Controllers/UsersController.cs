@@ -278,6 +278,7 @@ public class UsersController : ControllerBase
                 .Select(ur => ur.Role.Name!)
                 .ToList(),
             AccountNumber = user.EstateAccount?.AccountNumber,
+            AccountId = user.EstateAccount?.AccountId,
             AccountStatus = user.EstateAccount?.AccountStatus
         };
 }

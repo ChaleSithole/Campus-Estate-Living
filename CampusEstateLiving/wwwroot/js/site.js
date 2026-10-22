@@ -121,6 +121,46 @@
     syncTariffAmount();
   });
 
+  document.querySelectorAll("[data-assignment-building]").forEach((buildingSelect) => {
+    const form = buildingSelect.closest("form");
+    const roomGroup = form?.querySelector("[data-assignment-room-group]");
+    const roomSelect = form?.querySelector("[data-assignment-room]");
+    if (!roomGroup || !roomSelect) return;
+    const roomOptions = [...roomSelect.options].filter((option) => option.value);
+
+    const syncAssignmentRooms = () => {
+      const buildingId = buildingSelect.value;
+      const selectedRoomId = roomSelect.value;
+      for (const option of roomOptions) {
+        option.hidden = !buildingId || option.dataset.buildingId !== buildingId;
+      }
+      const selectedRoom = roomOptions.find((option) => option.value === selectedRoomId);
+      if (selectedRoom && selectedRoom.dataset.buildingId !== buildingId) roomSelect.value = "";
+      roomGroup.hidden = !buildingId;
+      roomSelect.disabled = !buildingId;
+      roomSelect.required = Boolean(buildingId);
+    };
+
+    buildingSelect.addEventListener("change", syncAssignmentRooms);
+    syncAssignmentRooms();
+  });
+
+  const tariffFilter = document.querySelector("[data-tariff-filter]");
+  if (tariffFilter) {
+    const tariffRows = [...document.querySelectorAll("[data-tariff-row]")];
+    const noTariffsFound = document.querySelector("[data-tariff-empty]");
+    tariffFilter.addEventListener("input", () => {
+      const query = tariffFilter.value.trim().toLocaleLowerCase();
+      let visibleCount = 0;
+      for (const row of tariffRows) {
+        const matches = row.dataset.tariffSearch.toLocaleLowerCase().includes(query);
+        row.hidden = !matches;
+        if (matches) visibleCount++;
+      }
+      if (noTariffsFound) noTariffsFound.hidden = visibleCount > 0;
+    });
+  }
+
   const syncPaymentMethod = () => {
     const method = document.querySelector('[name="PaymentMethod"]:checked')?.value;
     const eftBox = document.getElementById("eftBox");
@@ -130,6 +170,31 @@
   };
   document.querySelectorAll('[name="PaymentMethod"]').forEach((radio) => radio.addEventListener("change", syncPaymentMethod));
   syncPaymentMethod();
+
+  document.querySelectorAll("[data-pay-all-form]").forEach((form) => {
+    const items = [...form.querySelectorAll("[data-pay-all-item]")];
+    const totalLabels = [
+      form.querySelector("[data-pay-all-total]"),
+      document.querySelector("[data-pay-all-total-side]")
+    ].filter(Boolean);
+    const currency = (value) => new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(value);
+    const syncTotal = () => {
+      const total = items
+        .filter((item) => item.checked)
+        .reduce((sum, item) => sum + Number(item.dataset.amount || 0), 0);
+      totalLabels.forEach((label) => { label.textContent = currency(total); });
+    };
+    items.forEach((item) => item.addEventListener("change", syncTotal));
+    form.addEventListener("submit", (event) => {
+      if (!items.some((item) => item.checked)) {
+        event.preventDefault();
+        items[0]?.setCustomValidity("Select at least one service to pay.");
+        form.reportValidity();
+        items[0]?.setCustomValidity("");
+      }
+    });
+    syncTotal();
+  });
 
   document.querySelectorAll("[data-confirm-payment]").forEach((paymentForm) => {
     const paymentModal = document.querySelector("[data-payment-modal]");
@@ -182,9 +247,47 @@
     const modal = document.querySelector("[data-create-modal]");
     if (!modal) return;
     let submitting = false;
-    form.addEventListener("submit", (event) => { if (submitting) return; event.preventDefault(); if (!form.reportValidity()) return; modal.hidden = false; });
+    form.addEventListener("submit", (event) => {
+      if (submitting) return;
+      event.preventDefault();
+      
+      // Check both jQuery validator AND browser's native validation
+      const valid = window.jQuery?.validator ? window.jQuery(form).valid() : form.reportValidity();
+      if (!valid) return;
+      
+      // Also check custom HTML5 validation (required fields, patterns, etc.)
+      // This ensures data attributes like required, pattern, type="email" are enforced
+      const fields = form.querySelectorAll("input, select, textarea");
+      let allFieldsValid = true;
+      for (const field of fields) {
+        if (!field.checkValidity()) {
+          allFieldsValid = false;
+          field.reportValidity();
+          break;
+        }
+      }
+      if (!allFieldsValid) return;
+      
+      // All validation passed, show confirmation modal
+      modal.hidden = false;
+    });
     modal.querySelector("[data-cancel-create]")?.addEventListener("click", () => modal.hidden = true);
     modal.querySelector("[data-accept-create]")?.addEventListener("click", () => { submitting = true; modal.hidden = true; form.requestSubmit(); });
+  });
+
+  document.querySelectorAll("[data-live-validate]").forEach((form) => {
+    const validator = window.jQuery?.validator && window.jQuery(form).data("validator");
+    const validateField = (field) => {
+      if (field.type === "hidden" || field.disabled) return;
+      if (validator) window.jQuery(field).valid();
+      else field.reportValidity();
+    };
+
+    form.querySelectorAll("input, select, textarea").forEach((field) => {
+      field.addEventListener("input", () => validateField(field));
+      field.addEventListener("change", () => validateField(field));
+      field.addEventListener("blur", () => validateField(field));
+    });
   });
 
   const signoutModal = document.querySelector("[data-signout-modal]");

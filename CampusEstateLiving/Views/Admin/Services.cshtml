@@ -1,0 +1,46 @@
+@model List<PaymentCategory>
+@{
+    ViewData["Title"] = "Estate services";
+}
+<div class="page">
+    <partial name="_Alerts" />
+    <div class="page-head">
+        <div>
+            <p class="kicker">Administrator controls</p>
+            <h1>Estate services</h1>
+            <p class="muted">Review the services available for resident payments and maintain their descriptions.</p>
+        </div>
+        <a class="btn-outline" asp-action="Management">← Back to management</a>
+    </div>
+
+    <div class="cards-2">
+        @foreach (var service in Model)
+        {
+            var activeTariffs = service.Tariffs.Where(t => t.IsActive).ToList();
+            <section class="card">
+                <h2>@service.CategoryName</h2>
+                <p class="muted">@activeTariffs.Count active tariff(s)</p>
+                @if (activeTariffs.Count > 0)
+                {
+                    <ul>
+                        @foreach (var tariff in activeTariffs)
+                        {
+                            <li>@tariff.TariffName — @tariff.Amount.ToString("C") / @tariff.Unit</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>No active tariffs. Residents cannot select this service until a tariff is activated.</p>
+                }
+                <form asp-action="UpdateServiceDescription" asp-route-id="@service.CategoryId" method="post" class="form-grid">
+                    <div>
+                        <label for="description-@service.CategoryId">Service description</label>
+                        <textarea id="description-@service.CategoryId" name="description" class="form-control" maxlength="250" rows="3">@service.Description</textarea>
+                    </div>
+                    <button class="btn-outline" type="submit">Save description</button>
+                </form>
+            </section>
+        }
+    </div>
+</div>

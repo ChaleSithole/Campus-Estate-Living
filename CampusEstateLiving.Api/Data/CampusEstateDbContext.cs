@@ -30,6 +30,9 @@ public class CampusEstateDbContext
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<ResidentVehicle> ResidentVehicles => Set<ResidentVehicle>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<MaintenanceRequest> MaintenanceRequests => Set<MaintenanceRequest>();
+    public DbSet<StaffMessage> StaffMessages => Set<StaffMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -213,6 +216,40 @@ public class CampusEstateDbContext
                 .WithMany(u => u.Reviews)
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Announcement>(b =>
+        {
+            b.ToTable("Announcements");
+            b.HasIndex(a => a.PublishedAt);
+            b.HasOne(a => a.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(a => a.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<MaintenanceRequest>(b =>
+        {
+            b.ToTable("MaintenanceRequests");
+            b.HasIndex(m => m.UserId);
+            b.HasIndex(m => m.Status);
+            b.HasOne(m => m.User)
+                .WithMany()
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(m => m.Room)
+                .WithMany()
+                .HasForeignKey(m => m.RoomId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<StaffMessage>(b =>
+        {
+            b.ToTable("StaffMessages");
+            b.HasKey(m => m.MessageId);
+            b.Property(m => m.Body).HasMaxLength(4000).IsRequired();
+            b.HasIndex(m => new { m.SenderUserId, m.RecipientUserId, m.SentAt });
+            b.HasIndex(m => new { m.RecipientUserId, m.ReadAt });
         });
     }
 }

@@ -19,9 +19,15 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-var dbPath = ResolveSqlitePath(builder);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite($"Data Source={dbPath}"));
+    options.UseSqlServer(connectionString, sql =>
+        sql.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null)));
 
 builder.Services
     .AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -82,24 +88,3 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
-
-static string ResolveSqlitePath(WebApplicationBuilder builder)
-{
-    var configured = builder.Configuration.GetConnectionString("DefaultConnection");
-    if (!string.IsNullOrWhiteSpace(configured)
-        && configured.Contains("Data Source=", StringComparison.OrdinalIgnoreCase)
-        && !configured.Contains("SQLEXPRESS", StringComparison.OrdinalIgnoreCase)
-        && !configured.Contains("Server=", StringComparison.OrdinalIgnoreCase))
-    {
-        var file = configured.Split("Data Source=", 2, StringSplitOptions.TrimEntries)[1]
-            .Trim()
-            .TrimEnd(';');
-        if (!Path.IsPathRooted(file))
-            file = Path.Combine(builder.Environment.ContentRootPath, file);
-        return file;
-    }
-
-    var content = Path.Combine(builder.Environment.ContentRootPath, "campusestate.db");
-    if (File.Exists(content)) return content;
-    return Path.Combine(AppContext.BaseDirectory, "campusestate.db");
-}

@@ -69,55 +69,64 @@ public class AdminController : Controller
         ViewBag.Tariffs = await _db.Tariffs.Include(t => t.Category).OrderBy(t => t.Category.CategoryName).ThenBy(t => t.TariffName).ToListAsync();
         ViewBag.RoomTypes = await _db.RoomTypes.OrderBy(t => t.RoomTypeName).ToListAsync();
         ViewBag.Properties = await _db.Properties.OrderBy(p => p.BuildingName).ToListAsync();
-        ViewBag.Services = await _db.PaymentCategories.OrderBy(c => c.CategoryName).ToListAsync();
         return View();
     }
 
     [HttpGet]
     public async Task<IActionResult> Tariffs()
     {
-        ViewBag.Categories = new SelectList(await _db.PaymentCategories.OrderBy(c => c.CategoryName).ToListAsync(), "CategoryId", "CategoryName");
         ViewBag.Tariffs = await _db.Tariffs.Include(t => t.Category)
             .OrderBy(t => t.Category.CategoryName).ThenBy(t => t.TariffName).ToListAsync();
-        return View(new Tariff());
+        return View();
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Services()
+        => View(await _db.PaymentCategories.Include(c => c.Tariffs)
+            .OrderBy(c => c.CategoryName).ToListAsync());
+
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Tariffs(Tariff model)
+    public async Task<IActionResult> UpdateServiceDescription(int id, string? description)
     {
-        if (!await _db.PaymentCategories.AnyAsync(c => c.CategoryId == model.CategoryId))
-            ModelState.AddModelError(nameof(model.CategoryId), "Choose a valid service category.");
-        if (!ModelState.IsValid)
+        var service = await _db.PaymentCategories.FindAsync(id);
+        if (service == null) return NotFound();
+        if (description?.Length > 250)
         {
-            ViewBag.Categories = new SelectList(await _db.PaymentCategories.OrderBy(c => c.CategoryName).ToListAsync(), "CategoryId", "CategoryName", model.CategoryId);
-            ViewBag.Tariffs = await _db.Tariffs.Include(t => t.Category).OrderBy(t => t.Category.CategoryName).ThenBy(t => t.TariffName).ToListAsync();
-            return View(model);
+            TempData["Error"] = "Service descriptions can be at most 250 characters.";
+            return RedirectToAction(nameof(Services));
         }
 
-        _db.Tariffs.Add(new Tariff
-        {
-            CategoryId = model.CategoryId,
-            TariffName = model.TariffName.Trim(),
-            Amount = model.Amount,
-            Unit = model.Unit.Trim(),
-            IsActive = model.IsActive
-        });
+        service.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
         await _db.SaveChangesAsync();
-        TempData["Success"] = "Tariff added.";
-        return RedirectToAction(nameof(Tariffs));
+        TempData["Success"] = $"{service.CategoryName} service details updated.";
+        return RedirectToAction(nameof(Services));
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateTariff(int id, decimal amount, string unit, bool isActive)
+    public async Task<IActionResult> UpdateTariff(int id, [FromForm] string? amount, [FromForm] string? unit, [FromForm] bool isActive)
     {
         var tariff = await _db.Tariffs.FindAsync(id);
         if (tariff == null) return NotFound();
-        if (amount is < 0.01m or > 1_000_000m || string.IsNullOrWhiteSpace(unit) || unit.Length > 40)
+        var amountText = amount?.Trim();
+        if (!decimal.TryParse(amountText, System.Globalization.NumberStyles.Number,
+                System.Globalization.CultureInfo.InvariantCulture, out var parsedAmount) &&
+            !decimal.TryParse(amountText, System.Globalization.NumberStyles.Number,
+                System.Globalization.CultureInfo.CurrentCulture, out parsedAmount))
         {
-            TempData["Error"] = "Enter a valid amount and billing unit.";
+            TempData["Error"] = "Enter a valid tariff amount.";
             return RedirectToAction(nameof(Tariffs));
         }
-        tariff.Amount = amount;
+        if (parsedAmount is < 0.01m or > 1_000_000m)
+        {
+            TempData["Error"] = "Tariff amounts must be between R0.01 and R1,000,000.00.";
+            return RedirectToAction(nameof(Tariffs));
+        }
+        if (string.IsNullOrWhiteSpace(unit) || unit.Trim().Length > 40)
+        {
+            TempData["Error"] = "Enter a billing unit of 1 to 40 characters.";
+            return RedirectToAction(nameof(Tariffs));
+        }
+        tariff.Amount = parsedAmount;
         tariff.Unit = unit.Trim();
         tariff.IsActive = isActive;
         await _db.SaveChangesAsync();
@@ -428,7 +437,6 @@ public class AdminController : Controller
     [HttpGet]
     public async Task<IActionResult> AssignRoom(int? userId = null)
     {
-        await FillAssignmentLookups();
         var model = new AssignRoomViewModel { MoveInDate = DateTime.UtcNow.Date };
         if (userId.HasValue)
         {
@@ -439,13 +447,14 @@ public class AdminController : Controller
                 model.ResidentName = user.Person.FullName;
             }
         }
+        await FillAssignmentLookups();
         return View(model);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AssignRoom(AssignRoomViewModel model)
     {
-        await FillAssignmentLookups();
+        await FillAssignmentLookups(model.PropertyId > 0 ? model.PropertyId : null, model.UserId);
 
         var user = await _db.Users
             .Include(u => u.Person)
@@ -492,6 +501,13 @@ public class AdminController : Controller
                 string.Empty,
                 check.Error!);
         }
+
+        var selectedRoomPropertyId = await _db.Rooms
+            .Where(r => r.RoomId == model.RoomId)
+            .Select(r => (int?)r.PropertyId)
+            .FirstOrDefaultAsync();
+        if (selectedRoomPropertyId == null || selectedRoomPropertyId != model.PropertyId)
+            ModelState.AddModelError(nameof(model.RoomId), "Choose a room in the selected building.");
 
         if (!ModelState.IsValid)
             return View(model);
@@ -687,30 +703,37 @@ public class AdminController : Controller
         ViewBag.RoomTypes = new SelectList(await _db.RoomTypes.ToListAsync(), "RoomTypeId", "RoomTypeName");
     }
 
-    private async Task FillAssignmentLookups()
+    private async Task FillAssignmentLookups(int? selectedPropertyId = null, int? selectedUserId = null)
     {
         var residents = await _db.Users
             .Include(u => u.Person)
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
+            .Include(u => u.RoomAssignments)
             .Where(u =>
                 u.IsActive &&
                 u.UserRoles.Any(ur =>
                     ur.Role.Name == AppRoles.Student ||
-                    ur.Role.Name == AppRoles.Staff) &&
-                !u.RoomAssignments.Any(a => a.MoveOutDate == null))
+                    ur.Role.Name == AppRoles.Staff))
             .OrderBy(u => u.Person.LastName)
             .ThenBy(u => u.Person.FirstName)
             .ToListAsync();
 
+        // Include residents who already have active rooms so admin can assign additional rooms.
         ViewBag.Users = new SelectList(
-            residents.Select(u => new
+            residents.Select(u =>
             {
-                u.Id,
-                Name = $"{u.Person.FullName} ({u.Email})"
+                var activeRooms = u.RoomAssignments.Count(a => a.MoveOutDate == null);
+                var suffix = activeRooms > 0 ? $" · {activeRooms} active room(s)" : "";
+                return new
+                {
+                    u.Id,
+                    Name = $"{u.Person.FullName} ({u.Email}){suffix}"
+                };
             }),
             "Id",
-            "Name");
+            "Name",
+            selectedUserId);
 
         var rooms = await _db.Rooms
             .Include(r => r.Property)
@@ -731,6 +754,7 @@ public class AdminController : Controller
                 return new
                 {
                     r.RoomId,
+                    r.PropertyId,
                     r.Property.BuildingName,
                     r.RoomNumber,
                     r.RoomType.RoomTypeName,
@@ -742,6 +766,7 @@ public class AdminController : Controller
             .Select(r => new
             {
                 r.RoomId,
+                r.PropertyId,
                 Label =
                     $"{r.BuildingName} {r.RoomNumber} · " +
                     $"{r.RoomTypeName} " +
@@ -750,9 +775,11 @@ public class AdminController : Controller
             })
             .ToList();
 
-        ViewBag.Rooms = new SelectList(
-            availableRooms,
-            "RoomId",
-            "Label");
+        var availablePropertyIds = availableRooms.Select(r => r.PropertyId).Distinct().ToHashSet();
+        ViewBag.Buildings = new SelectList(
+            await _db.Properties.Where(p => p.PropertyStatus == PropertyStatuses.Active && availablePropertyIds.Contains(p.PropertyId))
+                .OrderBy(p => p.BuildingName).ToListAsync(),
+            "PropertyId", "BuildingName", selectedPropertyId);
+        ViewBag.AssignmentRooms = availableRooms;
     }
 }

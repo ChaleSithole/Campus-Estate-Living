@@ -81,7 +81,12 @@ public class EditUserViewModel
 public class AssignRoomViewModel
 {
     [Required]
+    [Display(Name = "Resident name")]
     public int UserId { get; set; }
+
+    [Required]
+    [Display(Name = "Building")]
+    public int PropertyId { get; set; }
 
     [Required]
     [Display(Name = "Room")]

@@ -27,18 +27,8 @@ public class OccupancyService
             );
         }
 
-        var hasActiveAssignment = await _db.RoomAssignments
-            .AnyAsync(a =>
-                a.UserId == userId &&
-                a.MoveOutDate == null);
-
-        if (hasActiveAssignment)
-        {
-            return (
-                false,
-                "This user already has an active room assignment."
-            );
-        }
+        // Users may hold more than one active room assignment at a time.
+        // Capacity and gender rules still apply per room.
 
         var room = await _db.Rooms
             .Include(r => r.RoomType)

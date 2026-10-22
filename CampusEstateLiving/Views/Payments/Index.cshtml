@@ -8,13 +8,51 @@
     <div class="page-head">
         <div>
             <p class="kicker">Account @account?.AccountNumber</p>
-            <h1>Payment history</h1>
+            <h1>Pay services</h1>
         </div>
         <div class="toolbar">
             <a class="btn-gold" asp-action="Create">New payment</a>
+            <a class="btn-outline" asp-action="All">Pay all available</a>
             <a class="btn-outline" asp-action="Statement">Monthly statement</a>
         </div>
     </div>
+    @if (ViewBag.PayableServices is List<PayableServiceViewModel> services && services.Count > 0)
+    {
+        <div class="cards-3" style="margin-bottom:1rem">
+            @foreach (var service in services)
+            {
+                <div class="card service-pay-card">
+                    <span class="stat-label">@service.CategoryName</span>
+                    <div class="stat-value" style="font-size:1.35rem">
+                        @(service.StartingAmount > 0 ? service.StartingAmount.ToString("C") : "Unavailable")
+                    </div>
+                    <p class="muted">
+                        @if (!string.IsNullOrWhiteSpace(service.AvailabilityMessage))
+                        {
+                            @service.AvailabilityMessage
+                        }
+                        else if (service.OptionCount > 1)
+                        {
+                            @($"{service.OptionCount} payment options available")
+                        }
+                        else
+                        {
+                            @(string.IsNullOrWhiteSpace(service.Description) ? service.Unit : service.Description)
+                        }
+                    </p>
+                    @if (service.IsAvailable)
+                    {
+                        <a class="btn-outline btn-sm" asp-action="Create" asp-route-categoryId="@service.CategoryId">Pay @service.CategoryName</a>
+                    }
+                    else
+                    {
+                        <button class="btn-outline btn-sm" type="button" disabled>Not available</button>
+                    }
+                </div>
+            }
+        </div>
+    }
+    <h2 class="section-title">Payment history</h2>
     <div class="toolbar" style="margin-bottom:1rem">
         <a class="btn-outline btn-sm" asp-action="Index">All</a>
         <a class="btn-outline btn-sm" asp-action="Index" asp-route-status="Pending">Pending</a>

@@ -57,6 +57,7 @@ public class PaymentsController : Controller
         ViewBag.LastPayment = list.FirstOrDefault();
         ViewBag.RecentPayments = list.Take(5).ToList();
         ViewBag.PaymentStatus = list.FirstOrDefault()?.PaymentStatus.StatusName ?? "No payments yet";
+        ViewBag.PayableServices = await PayableServicesAsync();
         ViewBag.Status = status;
         return View(list);
     }
@@ -267,6 +268,119 @@ public class PaymentsController : Controller
         return RedirectToAction(nameof(Receipt), new { id = payment.PaymentId });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> All()
+    {
+        var model = await BuildPayAllModelAsync();
+        if (model.Services.Count == 0)
+        {
+            TempData["Error"] = "No payable services are available for your account yet.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> All(PayAllViewModel model)
+    {
+        var user = await CurrentAsync();
+        var account = await _db.EstateAccounts.FirstOrDefaultAsync(a => a.UserId == user.Id);
+
+        if (account == null || account.AccountStatus != AccountStatuses.Active)
+        {
+            TempData["Error"] = "Your estate account is not active.";
+            return RedirectToAction("Dashboard", "Home");
+        }
+
+        var selectedIds = model.Services.Where(s => s.IsSelected).Select(s => s.CategoryId).ToHashSet();
+        // Honour the electricity (or other choosable) tariff the user picked on the form.
+        var selectedTariffs = model.Services
+            .Where(s => s.IsSelected && s.TariffId > 0)
+            .GroupBy(s => s.CategoryId)
+            .ToDictionary(g => g.Key, g => g.First().TariffId);
+        var resolved = await BuildPayAllModelAsync(selectedIds, selectedTariffs);
+        resolved.PaymentMethod = model.PaymentMethod;
+        resolved.SavedCardId = model.SavedCardId;
+
+        if (resolved.Services.Count == 0)
+            ModelState.AddModelError(string.Empty, "Select at least one available service to pay.");
+
+        if (resolved.PaymentMethod is not (PaymentMethods.Card or PaymentMethods.Eft))
+            ModelState.AddModelError(nameof(model.PaymentMethod), "Choose a supported payment method.");
+
+        if (resolved.PaymentMethod == PaymentMethods.Card)
+        {
+            if (!resolved.HasCards)
+            {
+                TempData["Error"] = "Add a card before paying by card.";
+                return RedirectToAction("AddCard", "Profile", new { returnUrl = Url.Action(nameof(All), "Payments") });
+            }
+
+            var cardOk = resolved.SavedCardId.HasValue &&
+                await _db.SavedCards.AnyAsync(c => c.CardId == resolved.SavedCardId.Value && c.UserId == user.Id);
+            if (!cardOk)
+                ModelState.AddModelError(nameof(model.SavedCardId), "Select one of your saved cards.");
+        }
+        else
+        {
+            resolved.SavedCardId = null;
+        }
+
+        // Hard gate: never charge parking unless the user still qualifies (registered vehicles).
+        var vehicleCount = await _db.ResidentVehicles.CountAsync(v => v.UserId == user.Id);
+        var parkingSelected = resolved.Services.Any(s => s.CategoryName == PaymentCategoryNames.Parking);
+        if (parkingSelected && vehicleCount < 2)
+        {
+            ModelState.AddModelError(string.Empty,
+                "Parking is only available when you have at least two registered vehicles. Parking was not charged.");
+            resolved.Services = resolved.Services
+                .Where(s => s.CategoryName != PaymentCategoryNames.Parking)
+                .ToList();
+            if (resolved.Services.Count == 0)
+                return View(resolved);
+        }
+
+        if (!ModelState.IsValid)
+            return View(resolved);
+
+        var cardPayment = resolved.PaymentMethod == PaymentMethods.Card;
+        var statusName = cardPayment ? PaymentStatusNames.Confirmed : PaymentStatusNames.Pending;
+        var status = await _db.PaymentStatuses.SingleAsync(s => s.StatusName == statusName);
+        var payments = resolved.Services.Select(service => new Payment
+        {
+            AccountId = account.AccountId,
+            CategoryId = service.CategoryId,
+            PaymentStatusId = status.PaymentStatusId,
+            Amount = service.Amount,
+            PaymentDate = DateTime.UtcNow,
+            PaymentMethod = resolved.PaymentMethod,
+            ReferenceNumber = EstateAccountService.NextPaymentReference(),
+            Notes = "Paid through pay all services.",
+            SavedCardId = cardPayment ? resolved.SavedCardId : null,
+            ProcessedAt = cardPayment ? DateTime.UtcNow : null,
+            ProcessingNotes = cardPayment ? "Simulated card authorization for school project. No real funds were transferred." : null
+        }).ToList();
+
+        _db.Payments.AddRange(payments);
+        await _db.SaveChangesAsync();
+
+        await _notify.NotifyAsync(
+            user.Id,
+            cardPayment ? "Service payments confirmed" : "Service payments submitted",
+            cardPayment
+                ? $"Your {payments.Count} service payments totaling {payments.Sum(p => p.Amount):C} were confirmed."
+                : $"Your {payments.Count} service payments totaling {payments.Sum(p => p.Amount):C} are pending verification.",
+            cardPayment ? "Payment Confirmed" : "Payment Pending",
+            payments.First().PaymentId);
+
+        TempData["Success"] = cardPayment
+            ? $"{payments.Count} service payments confirmed."
+            : $"{payments.Count} service payments submitted for verification.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
     public async Task<IActionResult> Details(int id)
     {
         var user = await CurrentAsync();
@@ -372,6 +486,155 @@ public class PaymentsController : Controller
         var user = await _users.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
         await _db.Entry(user).Reference(u => u.Person).LoadAsync();
         return user;
+    }
+
+    private async Task<List<PayableServiceViewModel>> PayableServicesAsync()
+    {
+        var user = await CurrentAsync();
+        var vehicleCount = await _db.ResidentVehicles.CountAsync(v => v.UserId == user.Id);
+        var categories = await _db.PaymentCategories
+            .Include(c => c.Tariffs.Where(t => t.IsActive))
+            .ToListAsync();
+
+        return categories
+            .OrderBy(c => c.CategoryName == PaymentCategoryNames.Rent ? 0 :
+                c.CategoryName == PaymentCategoryNames.Electricity ? 1 :
+                c.CategoryName == PaymentCategoryNames.Water ? 2 :
+                c.CategoryName == PaymentCategoryNames.Parking ? 3 : 4)
+            .Select(c =>
+            {
+                var tariffs = c.Tariffs.OrderBy(t => t.Amount).ToList();
+                var parkingUnavailable = c.CategoryName == PaymentCategoryNames.Parking && vehicleCount < 2;
+                var startingAmount = c.CategoryName == PaymentCategoryNames.Parking && tariffs.Count > 0
+                    ? tariffs[0].Amount * Math.Max(0, vehicleCount - 1)
+                    : tariffs.FirstOrDefault()?.Amount ?? 0m;
+
+                return new PayableServiceViewModel
+                {
+                    CategoryId = c.CategoryId,
+                    CategoryName = c.CategoryName,
+                    Description = c.Description,
+                    StartingAmount = startingAmount,
+                    Unit = tariffs.FirstOrDefault()?.Unit ?? "",
+                    OptionCount = tariffs.Count,
+                    IsAvailable = tariffs.Count > 0 && !parkingUnavailable,
+                    AvailabilityMessage = parkingUnavailable
+                        ? "Paid parking is available once two or more vehicles are registered."
+                        : tariffs.Count == 0 ? "No active tariff is available for this service yet." : null
+                };
+            })
+            .ToList();
+    }
+
+    private async Task<PayAllViewModel> BuildPayAllModelAsync(ISet<int>? selectedCategoryIds = null, IReadOnlyDictionary<int, int>? selectedTariffByCategory = null)
+    {
+        var user = await CurrentAsync();
+        var account = await _accounts.EnsureForResidentAsync(user);
+        var cards = await _db.SavedCards.Where(c => c.UserId == user.Id).ToListAsync();
+        var vehicleCount = await _db.ResidentVehicles.CountAsync(v => v.UserId == user.Id);
+        var assignment = await _db.RoomAssignments
+            .Include(a => a.Room).ThenInclude(r => r.Property)
+            .Include(a => a.Room).ThenInclude(r => r.RoomType)
+            .FirstOrDefaultAsync(a => a.UserId == user.Id && a.MoveOutDate == null);
+
+        var categories = await _db.PaymentCategories
+            .Include(c => c.Tariffs.Where(t => t.IsActive))
+            .ToListAsync();
+
+        var services = new List<PayAllServiceViewModel>();
+        foreach (var category in categories)
+        {
+            var tariffs = category.Tariffs.OrderBy(t => t.Amount).ToList();
+            if (tariffs.Count == 0) continue;
+
+            var isElectricity = category.CategoryName == PaymentCategoryNames.Electricity;
+            var isParking = category.CategoryName == PaymentCategoryNames.Parking;
+
+            Tariff? tariff = category.CategoryName switch
+            {
+                PaymentCategoryNames.Rent => assignment?.Room.RoomType.RoomTypeName == RoomTypeNames.Single
+                    ? tariffs.FirstOrDefault(t => t.TariffName.Contains("single room", StringComparison.OrdinalIgnoreCase))
+                    : assignment?.Room.RoomType.RoomTypeName == RoomTypeNames.Sharing
+                        ? tariffs.FirstOrDefault(t => t.TariffName.Contains("sharing room", StringComparison.OrdinalIgnoreCase))
+                        : null,
+                PaymentCategoryNames.Parking => vehicleCount >= 2 ? tariffs.FirstOrDefault() : null,
+                PaymentCategoryNames.Electricity => null, // resolved below from user choice or default
+                _ => tariffs.FirstOrDefault()
+            };
+
+            List<PayAllTariffOption> electricityOptions = [];
+            if (isElectricity)
+            {
+                electricityOptions = tariffs
+                    .OrderBy(t => t.Amount)
+                    .Select(t => new PayAllTariffOption
+                    {
+                        TariffId = t.TariffId,
+                        TariffName = t.TariffName,
+                        Amount = t.Amount,
+                        Unit = t.Unit
+                    })
+                    .ToList();
+
+                if (electricityOptions.Count == 0)
+                    continue;
+
+                int chosenTariffId;
+                if (selectedTariffByCategory != null
+                    && selectedTariffByCategory.TryGetValue(category.CategoryId, out var postedTariffId)
+                    && electricityOptions.Any(o => o.TariffId == postedTariffId))
+                {
+                    chosenTariffId = postedTariffId;
+                }
+                else
+                {
+                    chosenTariffId = electricityOptions[0].TariffId;
+                }
+
+                tariff = tariffs.First(t => t.TariffId == chosenTariffId);
+            }
+
+            if (tariff == null) continue;
+
+            var amount = isParking
+                ? tariff.Amount * (vehicleCount - 1)
+                : tariff.Amount;
+
+            if (amount <= 0) continue;
+
+            // Parking is never charged unless the user qualifies (vehicles) AND explicitly selects it.
+            var defaultSelected = !isParking && (selectedCategoryIds == null || selectedCategoryIds.Contains(category.CategoryId));
+            var explicitlySelected = selectedCategoryIds != null && selectedCategoryIds.Contains(category.CategoryId);
+
+            services.Add(new PayAllServiceViewModel
+            {
+                CategoryId = category.CategoryId,
+                TariffId = tariff.TariffId,
+                CategoryName = category.CategoryName,
+                TariffName = tariff.TariffName,
+                Description = category.Description,
+                Amount = amount,
+                IsSelected = isParking ? explicitlySelected : defaultSelected,
+                AllowsTariffChoice = isElectricity,
+                TariffOptions = electricityOptions
+            });
+        }
+
+        return new PayAllViewModel
+        {
+            AccountNumber = account.AccountNumber,
+            RoomLabel = assignment == null ? "Not assigned" : $"{assignment.Room.Property.BuildingName} Room {assignment.Room.RoomNumber}",
+            Cards = cards,
+            HasCards = cards.Count > 0,
+            SavedCardId = cards.FirstOrDefault(c => c.IsDefault)?.CardId ?? cards.FirstOrDefault()?.CardId,
+            Services = services
+                .Where(s => selectedCategoryIds == null || s.IsSelected)
+                .OrderBy(s => s.CategoryName == PaymentCategoryNames.Rent ? 0 :
+                    s.CategoryName == PaymentCategoryNames.Electricity ? 1 :
+                    s.CategoryName == PaymentCategoryNames.Water ? 2 :
+                    s.CategoryName == PaymentCategoryNames.Parking ? 3 : 4)
+                .ToList()
+        };
     }
 
     private async Task<List<SelectListItem>> CategoryOptions(int vehicleCount = 0)

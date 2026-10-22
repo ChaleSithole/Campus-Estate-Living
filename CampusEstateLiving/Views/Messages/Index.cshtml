@@ -1,0 +1,86 @@
+@model StaffMessagesIndexViewModel
+@{
+    ViewData["Title"] = "Staff messages";
+    var currentUserId = (int)ViewBag.CurrentUserId;
+}
+<div class="page messages-page">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">STAFF CHANNEL</span>
+            <h1>Messages</h1>
+            <p>Private conversations between administrators and financial officers.</p>
+        </div>
+    </div>
+    <partial name="_Alerts" />
+    <div class="messages-shell">
+        <aside class="messages-people card">
+            <div class="messages-people-head">
+                <div><strong>Colleagues</strong><span>@Model.Contacts.Count staff contacts</span></div>
+                <i class="bi bi-chat-dots" aria-hidden="true"></i>
+            </div>
+            <div class="messages-people-list">
+                @foreach (var contact in Model.Contacts)
+                {
+                    var active = Model.Selected?.UserId == contact.UserId;
+                    <a class="message-person @(active ? "selected" : null)" asp-action="Index" asp-route-withUserId="@contact.UserId">
+                        <span class="message-avatar">@string.Concat(contact.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(n => n[0]))</span>
+                        <span class="message-person-copy">
+                            <strong>@contact.Name</strong>
+                            <small>@contact.Role</small>
+                            <span>@(string.IsNullOrWhiteSpace(contact.LatestMessage) ? "Start a conversation" : contact.LatestMessage)</span>
+                        </span>
+                        @if (contact.UnreadCount > 0) { <b class="message-unread">@contact.UnreadCount</b> }
+                    </a>
+                }
+                @if (Model.Contacts.Count == 0)
+                {
+                    <div class="messages-empty-small">No other active administrators or financial officers are available.</div>
+                }
+            </div>
+        </aside>
+        <section class="messages-thread card">
+            @if (Model.Selected is null)
+            {
+                <div class="messages-welcome">
+                    <span class="messages-welcome-icon"><i class="bi bi-chat-square-text"></i></span>
+                    <h2>Keep estate operations connected</h2>
+                    <p>Choose a colleague to review your conversation, or start a new one from the list.</p>
+                </div>
+            }
+            else
+            {
+                <header class="thread-header">
+                    <span class="message-avatar">@string.Concat(Model.Selected.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(n => n[0]))</span>
+                    <div><strong>@Model.Selected.Name</strong><small>@Model.Selected.Role</small></div>
+                    <span class="thread-secure"><i class="bi bi-shield-check"></i> Staff channel</span>
+                </header>
+                <div class="thread-messages" id="threadMessages">
+                    @if (Model.Selected.Messages.Count == 0)
+                    {
+                        <div class="thread-start"><span>Conversation started</span><p>Send a message to @Model.Selected.Name.Split(' ')[0] to get started.</p></div>
+                    }
+                    @foreach (var message in Model.Selected.Messages)
+                    {
+                        var mine = message.SenderUserId == currentUserId;
+                        <article class="thread-message @(mine ? "mine" : "theirs")">
+                            <p>@message.Body</p>
+                            <time datetime="@message.SentAt.ToString("O")">@message.SentAt.ToLocalTime().ToString("d MMM, HH:mm")</time>
+                        </article>
+                    }
+                </div>
+                <form asp-action="Send" method="post" class="thread-composer">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="recipientId" value="@Model.Selected.UserId" />
+                    <textarea class="form-control" name="body" rows="2" maxlength="4000" placeholder="Write a message..." aria-label="Message" required></textarea>
+                    <button class="btn-gold" type="submit"><i class="bi bi-send"></i><span>Send</span></button>
+                </form>
+            }
+        </section>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        const thread = document.getElementById('threadMessages');
+        if (thread) thread.scrollTop = thread.scrollHeight;
+    </script>
+}

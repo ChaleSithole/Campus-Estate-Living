@@ -32,6 +32,7 @@ public class ApplicationDbContext
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<MaintenanceRequest> MaintenanceRequests => Set<MaintenanceRequest>();
     public DbSet<ResidentVehicle> ResidentVehicles => Set<ResidentVehicle>();
+    public DbSet<StaffMessage> StaffMessages => Set<StaffMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -111,7 +112,9 @@ public class ApplicationDbContext
         {
             b.HasIndex(v => new { v.UserId, v.RegistrationNumber }).IsUnique();
             b.HasIndex(v => v.UserId);
-            b.ToTable(t => t.HasCheckConstraint("CK_ResidentVehicles_Registration", "length(RegistrationNumber) BETWEEN 2 AND 12"));
+            b.ToTable(t => t.HasCheckConstraint(
+                "CK_ResidentVehicles_Registration",
+                "LEN(RegistrationNumber) BETWEEN 2 AND 12"));
             b.HasOne(v => v.User).WithMany(u => u.Vehicles).HasForeignKey(v => v.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -232,6 +235,15 @@ public class ApplicationDbContext
                 .WithMany()
                 .HasForeignKey(m => m.RoomId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<StaffMessage>(b =>
+        {
+            b.ToTable("StaffMessages");
+            b.HasKey(m => m.MessageId);
+            b.Property(m => m.Body).HasMaxLength(4000).IsRequired();
+            b.HasIndex(m => new { m.SenderUserId, m.RecipientUserId, m.SentAt });
+            b.HasIndex(m => new { m.RecipientUserId, m.ReadAt });
         });
     }
 }

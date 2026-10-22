@@ -60,4 +60,32 @@ public class ReportsController : ControllerBase
                 .ToDictionary(g => g.Key, g => g.Count())
         });
     }
+
+    [HttpGet("export")]
+    public async Task<IActionResult> Export(
+        DateTime? from = null,
+        DateTime? to = null,
+        int? categoryId = null,
+        string? status = null)
+    {
+        var reportResult = await Get(from, to, categoryId, status);
+        if (reportResult.Result is not OkObjectResult ok || ok.Value is not ReportDto report)
+            return reportResult.Result ?? StatusCode(500);
+
+        var lines = new List<string> { "Category,Amount" };
+        foreach (var row in report.ByCategory)
+            lines.Add($"{Csv(row.Key)},{row.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+        lines.Add($"Confirmed total,{report.ConfirmedTotal.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+        return Ok(new
+        {
+            fileName = $"cel-report-{report.From:yyyyMMdd}-{report.To:yyyyMMdd}.csv",
+            csv = string.Join("\n", lines)
+        });
+    }
+
+    private static string Csv(string value)
+    {
+        var safe = value.Replace("\"", "\"\"");
+        return safe.Contains(',') ? $"\"{safe}\"" : safe;
+    }
 }

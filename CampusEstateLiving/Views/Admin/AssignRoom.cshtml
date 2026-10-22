@@ -10,12 +10,28 @@
         <form asp-action="AssignRoom" method="post" class="form-grid">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div>
-                <label asp-for="UserId"></label>
-                <select asp-for="UserId" class="form-control" asp-items="ViewBag.Users"></select>
+                <label asp-for="UserId">Resident name</label>
+                <select asp-for="UserId" class="form-control" asp-items="ViewBag.Users">
+                    <option value="">Choose a resident</option>
+                </select>
             </div>
             <div>
-                <label asp-for="RoomId"></label>
-                <select asp-for="RoomId" class="form-control" asp-items="ViewBag.Rooms"></select>
+                <label asp-for="PropertyId">Building</label>
+                <select asp-for="PropertyId" class="form-control" asp-items="ViewBag.Buildings" data-assignment-building>
+                    <option value="">Choose an available building</option>
+                </select>
+                <span asp-validation-for="PropertyId" class="text-danger"></span>
+            </div>
+            <div data-assignment-room-group hidden="@(Model.PropertyId <= 0)">
+                <label asp-for="RoomId">Available room</label>
+                <select asp-for="RoomId" class="form-control" data-assignment-room required disabled="@(Model.PropertyId <= 0)">
+                    <option value="">Choose a room</option>
+                    @foreach (var room in ViewBag.AssignmentRooms)
+                    {
+                        <option value="@room.RoomId" data-building-id="@room.PropertyId">@room.Label</option>
+                    }
+                </select>
+                <span asp-validation-for="RoomId" class="text-danger"></span>
             </div>
             <div>
                 <label asp-for="MoveInDate"></label>

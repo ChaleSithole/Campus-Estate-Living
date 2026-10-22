@@ -6,19 +6,22 @@
     <div class="auth-card" style="width:min(520px,100%)">
         <h1>Resident registration</h1>
         <p class="sub">Students and staff only. Administrators and financial officers are created by the agent head.</p>
-        @if (ViewBag.AccountCreated == true) { <div class="alert alert-success">Account Created Successfully. Welcome to Campus Estate Living.</div> }
-        <form asp-action="Register" method="post" class="form-grid" data-confirm-create>
+        @if (ViewBag.AccountCreated == true) 
+        { 
+            <div class="alert alert-success">Account Created Successfully. Welcome to Campus Estate Living.</div> 
+        }
+        <form asp-action="Register" method="post" class="form-grid" data-confirm-create data-live-validate>
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-grid two">
                 <div>
                     <label asp-for="FirstName"></label>
                     <input asp-for="FirstName" class="form-control" />
-                    <span asp-validation-for="FirstName"></span>
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
                 </div>
                 <div>
                     <label asp-for="LastName"></label>
                     <input asp-for="LastName" class="form-control" />
-                    <span asp-validation-for="LastName"></span>
+                    <span asp-validation-for="LastName" class="text-danger"></span>
                 </div>
             </div>
             <div>
@@ -27,38 +30,60 @@
                     <option value="Student">Student</option>
                     <option value="Staff">Staff member</option>
                 </select>
+                <span asp-validation-for="AccountType" class="text-danger"></span>
             </div>
             <div>
                 <label asp-for="UserNumber" data-register-number-label></label>
                 <input asp-for="UserNumber" class="form-control" data-register-number inputmode="numeric" />
-                <span asp-validation-for="UserNumber"></span>
+                <span asp-validation-for="UserNumber" class="text-danger"></span>
             </div>
             <div class="form-grid two">
-                <div><label asp-for="DateOfBirth"></label><input asp-for="DateOfBirth" class="form-control" type="date" /></div>
-                <div><label asp-for="Gender"></label><select asp-for="Gender" class="form-control"><option value="">Select</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+                <div>
+                    <label asp-for="DateOfBirth"></label>
+                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="Gender"></label>
+                    <select asp-for="Gender" class="form-control">
+                        <option value="">Select</option>
+                        <option>Female</option>
+                        <option>Male</option>
+                        <option>Non-binary</option>
+                        <option>Prefer not to say</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="text-danger"></span>
+                </div>
             </div>
             <label style="font-weight:500"><input asp-for="HasDisability" /> Disability support requested</label>
-            <div><label asp-for="DisabilityDetails"></label><textarea asp-for="DisabilityDetails" class="form-control" rows="2"></textarea></div>
+            <div>
+                <label asp-for="DisabilityDetails"></label>
+                <textarea asp-for="DisabilityDetails" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="DisabilityDetails" class="text-danger"></span>
+            </div>
             <div>
                 <label asp-for="PhoneNumber"></label>
-                <input asp-for="PhoneNumber" class="form-control" />
+                <input asp-for="PhoneNumber" class="form-control" inputmode="tel" autocomplete="tel"
+                       placeholder="e.g. 0821234567" maxlength="20" data-register-phone />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                <p class="hint">Digits only (optional + at the start). Example: 0821234567</p>
             </div>
             <div>
                 <label asp-for="Email"></label>
                 <input asp-for="Email" class="form-control" autocomplete="username" />
-                <span asp-validation-for="Email"></span>
+                <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             <div class="form-grid two">
                 <div>
                     <label asp-for="Password"></label>
                     <input asp-for="Password" class="form-control" autocomplete="new-password" />
                     <p class="hint">At least 8 characters, with upper and lower case, a number and a symbol.</p>
-                    <span asp-validation-for="Password"></span>
+                    <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
                 <div>
                     <label asp-for="ConfirmPassword"></label>
                     <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
-                    <span asp-validation-for="ConfirmPassword"></span>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                 </div>
             </div>
             <button class="btn-primary" type="submit">Create account</button>
@@ -68,5 +93,245 @@
         </p>
     </div>
 </div>
-<div class="modal-backdrop" data-create-modal hidden><section class="confirm-modal" role="dialog" aria-modal="true"><h2>Create Account?</h2><p>Please confirm that the information entered is correct.</p><div class="toolbar"><button type="button" class="btn-outline" data-cancel-create>Cancel</button><button type="button" class="btn-primary" data-accept-create>Create Account</button></div></section></div>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+<div class="modal-backdrop" data-create-modal hidden>
+    <section class="confirm-modal" role="dialog" aria-modal="true">
+        <h2>Create Account?</h2>
+        <p>Please confirm that the information entered is correct.</p>
+        <div class="toolbar">
+            <button type="button" class="btn-outline" data-cancel-create>Cancel</button>
+            <button type="button" class="btn-primary" data-accept-create>Create Account</button>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const form = document.querySelector("form[data-live-validate]");
+            if (!form) return;
+
+            const accountType = form.querySelector("[data-account-type]");
+            const userNumber = form.querySelector("[data-register-number]");
+            const emailInput = form.querySelector("[name='Email']");
+            const phoneInput = form.querySelector("[data-register-phone]") || form.querySelector("[name='PhoneNumber']");
+            const password = form.querySelector("[name='Password']");
+            const confirmPassword = form.querySelector("[name='ConfirmPassword']");
+            const dateOfBirth = form.querySelector("[name='DateOfBirth']");
+            const gender = form.querySelector("[name='Gender']");
+            const numberLabel = form.querySelector("[data-register-number-label]");
+
+            const setError = (fieldName, message) => {
+                const span = form.querySelector(`[data-valmsg-for="${fieldName}"]`);
+                if (!span) return;
+                if (message) {
+                    span.textContent = message;
+                    span.classList.remove("field-validation-valid");
+                    span.classList.add("field-validation-error");
+                    span.classList.add("text-danger");
+                } else {
+                    span.textContent = "";
+                    span.classList.remove("field-validation-error");
+                    span.classList.add("field-validation-valid");
+                }
+            };
+
+            const expectedDigits = () => (accountType?.value === "Staff" ? 7 : 10);
+            const expectedDomain = () => {
+                return accountType?.value === "Staff" ? "@@ufs.ac.za" : "@@ufs4life.ac.za";
+            };
+
+            const updateHints = () => {
+                const digits = expectedDigits();
+                const domain = expectedDomain();
+                if (numberLabel) {
+                    numberLabel.textContent = accountType?.value === "Staff" ? "Staff number" : "Student number";
+                }
+                if (userNumber) {
+                    userNumber.setAttribute("maxlength", String(digits));
+                    userNumber.setAttribute("inputmode", "numeric");
+                    userNumber.setAttribute("placeholder", `${digits} digits only`);
+                    userNumber.setAttribute("pattern", `\\d{${digits}}`);
+                }
+                if (emailInput) {
+                    emailInput.setAttribute("placeholder", "name" + domain);
+                }
+            };
+
+            const validateUserNumber = () => {
+                if (!userNumber) return true;
+                const value = (userNumber.value || "").trim();
+                const digits = expectedDigits();
+                if (!value) {
+                    setError("UserNumber", "Student / staff number is required.");
+                    return false;
+                }
+                const numberRe = digits === 7 ? /^[0-9]{7}$/ : /^[0-9]{10}$/;
+                if (!numberRe.test(value)) {
+                    setError(
+                        "UserNumber",
+                        accountType?.value === "Staff"
+                            ? "Staff number must be exactly 7 digits (0-9 only)."
+                            : "Student number must be exactly 10 digits (0-9 only)."
+                    );
+                    return false;
+                }
+                setError("UserNumber", "");
+                return true;
+            };
+
+            const validateEmail = () => {
+                if (!emailInput) return true;
+                const value = (emailInput.value || "").trim().toLowerCase();
+                if (!value) {
+                    setError("Email", "Email is required.");
+                    return false;
+                }
+                const studentRe = /^[a-z0-9._%+\-]+@@ufs4life\.ac\.za$/;
+                const staffRe = /^[a-z0-9._%+\-]+@@ufs\.ac\.za$/;
+                const ok = accountType?.value === "Staff"
+                    ? staffRe.test(value)
+                    : studentRe.test(value);
+                if (!ok) {
+                    setError(
+                        "Email",
+                        accountType?.value === "Staff"
+                            ? "Staff email must match: name@ufs.ac.za"
+                            : "Student email must match: name@ufs4life.ac.za"
+                    );
+                    return false;
+                }
+                setError("Email", "");
+                return true;
+            };
+
+            const validatePhone = () => {
+                if (!phoneInput) return true;
+                const value = (phoneInput.value || "").trim();
+                if (!value) {
+                    setError("PhoneNumber", "");
+                    return true;
+                }
+                const phoneRe = /^\+?[0-9]{10,15}$/;
+                if (!phoneRe.test(value)) {
+                    setError(
+                        "PhoneNumber",
+                        "Phone must be 10–15 digits only (optional + at the start). No letters or spaces."
+                    );
+                    return false;
+                }
+                setError("PhoneNumber", "");
+                return true;
+            };
+
+            const validatePassword = () => {
+                if (!password) return true;
+                const value = password.value || "";
+                if (!value) {
+                    setError("Password", "Password is required.");
+                    return false;
+                }
+                const ok =
+                    value.length >= 8 &&
+                    /[A-Z]/.test(value) &&
+                    /[a-z]/.test(value) &&
+                    /\d/.test(value) &&
+                    /[^A-Za-z0-9]/.test(value);
+                if (!ok) {
+                    setError(
+                        "Password",
+                        "At least 8 characters, with upper case, lower case, a number and a symbol."
+                    );
+                    return false;
+                }
+                setError("Password", "");
+                return true;
+            };
+
+            const validateConfirm = () => {
+                if (!confirmPassword) return true;
+                if ((confirmPassword.value || "") !== (password?.value || "")) {
+                    setError("ConfirmPassword", "Passwords do not match.");
+                    return false;
+                }
+                setError("ConfirmPassword", "");
+                return true;
+            };
+
+            const validateDateOfBirth = () => {
+                if (!dateOfBirth) return true;
+                const value = (dateOfBirth.value || "").trim();
+                if (!value) {
+                    setError("DateOfBirth", "Date of birth is required.");
+                    return false;
+                }
+                const selectedDate = new Date(value);
+                const today = new Date();
+                if (selectedDate > today) {
+                    setError("DateOfBirth", "Date of birth cannot be in the future.");
+                    return false;
+                }
+                const age = today.getFullYear() - selectedDate.getFullYear();
+                const monthDiff = today.getMonth() - selectedDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < selectedDate.getDate())) {
+                    age--;
+                }
+                if (age < 18) {
+                    setError("DateOfBirth", "You must be at least 18 years old.");
+                    return false;
+                }
+                setError("DateOfBirth", "");
+                return true;
+            };
+
+            const validateGender = () => {
+                if (!gender) return true;
+                const value = (gender.value || "").trim();
+                if (!value) {
+                    setError("Gender", "Gender is required.");
+                    return false;
+                }
+                setError("Gender", "");
+                return true;
+            };
+
+            userNumber?.addEventListener("input", validateUserNumber);
+            userNumber?.addEventListener("blur", validateUserNumber);
+            emailInput?.addEventListener("input", validateEmail);
+            emailInput?.addEventListener("blur", validateEmail);
+            phoneInput?.addEventListener("input", validatePhone);
+            phoneInput?.addEventListener("blur", validatePhone);
+            password?.addEventListener("input", () => {
+                validatePassword();
+                validateConfirm();
+            });
+            confirmPassword?.addEventListener("input", validateConfirm);
+            dateOfBirth?.addEventListener("change", validateDateOfBirth);
+            dateOfBirth?.addEventListener("blur", validateDateOfBirth);
+            gender?.addEventListener("change", validateGender);
+            accountType?.addEventListener("change", () => {
+                updateHints();
+                validateUserNumber();
+                validateEmail();
+            });
+
+            form.addEventListener(
+                "submit",
+                (event) => {
+                    const ok = validateUserNumber() && validateEmail() && validatePhone() && validatePassword() && validateConfirm() && validateDateOfBirth() && validateGender();
+                    if (!ok) {
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        (userNumber && !(userNumber.value || "").trim()
+                            ? userNumber
+                            : emailInput
+                        )?.focus();
+                    }
+                },
+                true
+            );
+
+            updateHints();
+        })();
+    </script>
+}

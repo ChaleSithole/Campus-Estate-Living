@@ -48,6 +48,57 @@ public class PaymentsController : ControllerBase
         return Ok(payments.Select(PaymentMapper.ToDto));
     }
 
+    [HttpGet("statement")]
+    [Authorize(Roles = $"{AppRoles.Student},{AppRoles.Staff}")]
+    public async Task<ActionResult<StatementDto>> Statement(int? year = null, int? month = null)
+    {
+        var userId = User.GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var user = await _db.Users
+            .Include(u => u.Person)
+            .FirstOrDefaultAsync(u => u.Id == userId.Value);
+        if (user == null) return Unauthorized();
+
+        var account = await _db.EstateAccounts.FirstOrDefaultAsync(a => a.UserId == user.Id);
+        if (account == null)
+            return BadRequest(new { message = "No estate account is linked to this login." });
+
+        var now = SaClock.Now();
+        var y = year ?? now.Year;
+        var m = month ?? now.Month;
+        if (m is < 1 or > 12 || y < 2000 || y > 2100)
+            return BadRequest(new { message = "Choose a valid statement month." });
+
+        var start = new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc);
+        var end = start.AddMonths(1);
+        var payments = await PaymentsQuery()
+            .Where(p => p.AccountId == account.AccountId && p.PaymentDate >= start && p.PaymentDate < end)
+            .OrderBy(p => p.PaymentDate)
+            .ToListAsync();
+
+        var assignment = await _db.RoomAssignments
+            .AsNoTracking()
+            .Include(a => a.Room).ThenInclude(r => r.Property)
+            .FirstOrDefaultAsync(a => a.UserId == user.Id && a.MoveOutDate == null);
+
+        return Ok(new StatementDto
+        {
+            FullName = user.Person.FullName,
+            Email = user.Email ?? string.Empty,
+            UserNumber = user.UserNumber,
+            AccountNumber = account.AccountNumber,
+            RoomLabel = assignment == null
+                ? "Not assigned"
+                : $"{assignment.Room.Property.BuildingName} Room {assignment.Room.RoomNumber}",
+            Year = y,
+            Month = m,
+            Payments = payments.Select(PaymentMapper.ToDto).ToList(),
+            ConfirmedTotal = payments.Where(p => p.PaymentStatus.StatusName == PaymentStatusNames.Confirmed).Sum(p => p.Amount),
+            PendingTotal = payments.Where(p => p.PaymentStatus.StatusName == PaymentStatusNames.Pending).Sum(p => p.Amount)
+        });
+    }
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<PaymentDto>> Get(int id)
     {
@@ -93,9 +144,16 @@ public class PaymentsController : ControllerBase
             return BadRequest(new { message = "Payment method must be Card or EFT." });
         }
 
+        SavedCard? savedCard = null;
         if (request.PaymentMethod == PaymentMethods.Card)
         {
-            return BadRequest(new { message = "Card payment processing requires a configured payment gateway." });
+            if (!request.SavedCardId.HasValue)
+                return BadRequest(new { message = "Select one of your saved cards." });
+
+            savedCard = await _db.SavedCards.FirstOrDefaultAsync(c =>
+                c.CardId == request.SavedCardId.Value && c.UserId == user.Id);
+            if (savedCard == null)
+                return BadRequest(new { message = "Select one of your saved cards." });
         }
 
         var tariff = await _db.Tariffs
@@ -109,22 +167,20 @@ public class PaymentsController : ControllerBase
         if (await _db.PaymentCategories.Where(c => c.CategoryId == tariff.CategoryId).Select(c => c.CategoryName == PaymentCategoryNames.Parking).FirstOrDefaultAsync() && await _db.Users.Where(u => u.Id == user.Id).Select(u => u.Vehicles.Count).FirstOrDefaultAsync() < 2)
             return BadRequest(new { message = "Paid parking is available after registering at least two vehicles; one vehicle is included." });
 
-        var pending = await _db.PaymentStatuses
+        var status = await _db.PaymentStatuses
             .SingleAsync(s => s.StatusName == PaymentStatusNames.Pending);
 
         var payment = new Payment
         {
             AccountId = account.AccountId,
             CategoryId = tariff.CategoryId,
-            PaymentStatusId = pending.PaymentStatusId,
+            PaymentStatusId = status.PaymentStatusId,
             Amount = tariff.Amount,
             PaymentDate = DateTime.UtcNow,
             PaymentMethod = request.PaymentMethod,
             ReferenceNumber = EstateAccountService.NextPaymentReference(),
             Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(),
-            SavedCardId = request.PaymentMethod == PaymentMethods.Card
-                ? request.SavedCardId
-                : null
+            SavedCardId = request.PaymentMethod == PaymentMethods.Card ? savedCard!.CardId : null
         };
 
         _db.Payments.Add(payment);

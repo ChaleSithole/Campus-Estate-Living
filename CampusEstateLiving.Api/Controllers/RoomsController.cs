@@ -1,4 +1,5 @@
 ﻿using CampusEstateLiving.Api.Data;
+using CampusEstateLiving.Api.Data.Entities;
 using CampusEstateLiving.Shared.DTOs.Accommodation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +44,83 @@ public class RoomsController : ControllerBase
         _context.RoomAssignments.Add(new CampusEstateLiving.Api.Data.Entities.RoomAssignment { RoomId = roomId, UserId = userId, MoveInDate = moveInDate?.Date ?? DateTime.UtcNow.Date });
         await _context.SaveChangesAsync();
         return Ok(new { message = "Resident assigned." });
+    }
+
+    [HttpGet("types")]
+    [Authorize(Roles = AppRoles.Administrator)]
+    public async Task<ActionResult<IEnumerable<RoomTypeDto>>> Types()
+    {
+        var types = await _context.RoomTypes
+            .AsNoTracking()
+            .OrderBy(t => t.RoomTypeName)
+            .Select(t => new RoomTypeDto
+            {
+                RoomTypeId = t.RoomTypeId,
+                RoomTypeName = t.RoomTypeName,
+                Capacity = t.Capacity
+            })
+            .ToListAsync();
+        return Ok(types);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = AppRoles.Administrator)]
+    public async Task<ActionResult<RoomDto>> Create(CreateRoomRequest request)
+    {
+        var property = await _context.Properties.FirstOrDefaultAsync(p => p.PropertyId == request.PropertyId);
+        var limits = property?.BuildingCode switch
+        {
+            "QWA-A" => (Total: 48, Single: 48, Sharing: 0),
+            "QWA-B" or "QWA-C" or "QWA-D" => (Total: 72, Single: 54, Sharing: 18),
+            _ => (Total: 0, Single: 0, Sharing: 0)
+        };
+        if (property == null || limits.Total == 0)
+            return BadRequest(new { message = "Choose one of the four configured estate buildings." });
+
+        var roomNumber = request.RoomNumber.Trim();
+        if (roomNumber.Length is < 1 or > 20)
+            return BadRequest(new { message = "Enter a room number of 1 to 20 characters." });
+        if (await _context.Rooms.AnyAsync(r => r.PropertyId == request.PropertyId && r.RoomNumber == roomNumber))
+            return Conflict(new { message = "That room number already exists in this building." });
+
+        var selected = await _context.RoomTypes.FirstOrDefaultAsync(t => t.RoomTypeId == request.RoomTypeId);
+        if (selected == null || selected.RoomTypeName is not (RoomTypeNames.Single or RoomTypeNames.Sharing))
+            return BadRequest(new { message = "Choose Single or Sharing room type." });
+
+        var existing = await _context.Rooms.Where(r => r.PropertyId == request.PropertyId).ToListAsync();
+        var singleTypeId = await _context.RoomTypes.Where(t => t.RoomTypeName == RoomTypeNames.Single).Select(t => t.RoomTypeId).FirstOrDefaultAsync();
+        var sharingTypeId = await _context.RoomTypes.Where(t => t.RoomTypeName == RoomTypeNames.Sharing).Select(t => t.RoomTypeId).FirstOrDefaultAsync();
+        var singleCount = existing.Count(r => r.RoomTypeId == singleTypeId);
+        var sharingCount = existing.Count(r => r.RoomTypeId == sharingTypeId);
+        if (existing.Count >= limits.Total)
+            return BadRequest(new { message = $"{property.BuildingName} already has its full {limits.Total}-room allocation." });
+        if (selected.RoomTypeName == RoomTypeNames.Single && singleCount >= limits.Single)
+            return BadRequest(new { message = "This building already has its full allocation of single rooms." });
+        if (selected.RoomTypeName == RoomTypeNames.Sharing && sharingCount >= limits.Sharing)
+            return BadRequest(new { message = "This building already has its full allocation of sharing rooms." });
+
+        var room = new Room
+        {
+            PropertyId = request.PropertyId,
+            RoomTypeId = request.RoomTypeId,
+            RoomNumber = roomNumber,
+            Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim()
+        };
+        _context.Rooms.Add(room);
+        await _context.SaveChangesAsync();
+
+        return Ok(new RoomDto
+        {
+            RoomId = room.RoomId,
+            PropertyId = room.PropertyId,
+            BuildingName = property.BuildingName,
+            RoomNumber = room.RoomNumber,
+            RoomType = selected.RoomTypeName,
+            Capacity = selected.Capacity,
+            CurrentOccupants = 0,
+            AvailableSpaces = selected.Capacity,
+            Notes = room.Notes
+        });
     }
 
     [HttpGet]

@@ -49,7 +49,8 @@ public class RegisterViewModel
     [Display(Name = "Disability details (optional)")]
     public string? DisabilityDetails { get; set; }
 
-    [Phone, StringLength(20)]
+    [StringLength(20)]
+    [RegularExpression(@"^$|^\+?[0-9]{10,15}$", ErrorMessage = "Phone must be 10–15 digits only (optional + at the start). No letters or spaces.")]
     [Display(Name = "Phone")]
     public string? PhoneNumber { get; set; }
 
@@ -60,7 +61,7 @@ public class RegisterViewModel
     [StringLength(100, MinimumLength = 8)]
     public string Password { get; set; } = string.Empty;
 
-    [DataType(DataType.Password)]
+    [Required, DataType(DataType.Password)]
     [Display(Name = "Confirm password")]
     [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
     public string ConfirmPassword { get; set; } = string.Empty;
@@ -94,7 +95,7 @@ public class ResetUserPasswordViewModel
     [Display(Name = "New password")]
     public string NewPassword { get; set; } = string.Empty;
 
-    [DataType(DataType.Password)]
+    [Required, DataType(DataType.Password)]
     [Display(Name = "Confirm password")]
     [Compare(nameof(NewPassword))]
     public string ConfirmPassword { get; set; } = string.Empty;

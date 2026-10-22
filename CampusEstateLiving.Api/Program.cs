@@ -10,13 +10,18 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+var connectionString = builder.Configuration
+    .GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
         "DefaultConnection is not configured.");
 
 builder.Services.AddDbContext<CampusEstateDbContext>(options =>
 {
-    options.UseSqlServer(connectionString);
+    options.UseSqlServer(connectionString, sql =>
+        sql.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null));
 });
 
 builder.Services
@@ -123,9 +128,30 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseCors("ClientApps");
 app.UseAuthentication();
 app.UseAuthorization();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CampusEstateDbContext>();
+    await SchemaEnsure.ApplyAsync(db);
+}
+
+app.MapGet("/api/diagnostics/roles", async (CampusEstateDbContext db) =>
+{
+    var roles = await db.Roles
+        .Select(r => new
+        {
+            r.Id,
+            r.Name,
+            r.NormalizedName
+        })
+        .ToListAsync();
+
+    return Results.Ok(roles);
+});
+
 app.MapControllers();
 app.Run();
